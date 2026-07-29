@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Synththulhu — Drone Synth</title>
+<style>
+  :root {
+    --bg: #07100e;
+    --panel: #0f1c19;
+    --panel-edge: #1c332d;
+    --teal: #4fe3c9;
+    --teal-dim: #2a5f55;
+    --red: #ff5252;
+    --text: #e7f3ef;
+    --text-dim: #7f9c95;
+    --mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(ellipse at 50% 20%, #0d1c19 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .breathe {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 40%, rgba(79,227,201,0.10) 0%, rgba(79,227,201,0) 60%);
+    animation: breathe 8s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.08); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .breathe { animation: none; }
+  }
+
+  .panel {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 10px;
+    padding: 28px 24px;
+    box-shadow: 0 0 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(79,227,201,0.03);
+    max-width: 980px;
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 4px 0;
+    font-weight: 600;
+  }
+  .subtitle {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 0 0 22px 0;
+    letter-spacing: 0.05em;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) 1.3fr;
+    gap: 18px;
+  }
+
+  .osc-col, .global-col {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .col-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .knob-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    user-select: none;
+  }
+  .knob {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #1c332d, #0a1512 70%);
+    border: 1px solid var(--panel-edge);
+    position: relative;
+    cursor: ns-resize;
+    touch-action: none;
+  }
+  .knob::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    width: 2px;
+    height: 18px;
+    background: var(--teal);
+    transform-origin: 50% 21px;
+    transform: translateX(-50%) rotate(var(--angle, 0deg));
+    border-radius: 1px;
+    box-shadow: 0 0 6px var(--teal);
+  }
+  .knob-label {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .knob-val {
+    font-size: 9px;
+    color: var(--teal-dim);
+  }
+
+  .vslider-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  input[type="range"].vslider {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 20px;
+    height: 90px;
+    accent-color: var(--teal);
+    background: transparent;
+  }
+
+  .switch {
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    background: #1c332d;
+    border: 1px solid var(--panel-edge);
+    position: relative;
+    cursor: pointer;
+  }
+  .switch.on { background: var(--teal-dim); }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: left 0.15s ease, background 0.15s ease;
+  }
+  .switch.on::after {
+    left: 22px;
+    background: var(--teal);
+    box-shadow: 0 0 8px var(--teal);
+  }
+
+  .led {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #3a1414;
+    box-shadow: inset 0 0 3px rgba(0,0,0,0.6);
+  }
+  .led.on {
+    background: var(--red);
+    box-shadow: 0 0 8px var(--red), 0 0 2px var(--red);
+  }
+
+  .scale-row { display: flex; gap: 6px; }
+
+  button.punch {
+    background: var(--panel-edge);
+    color: var(--text);
+    border: 1px solid var(--teal-dim);
+    border-radius: 16px;
+    padding: 6px 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  button.punch:hover { border-color: var(--teal); color: var(--teal); }
+
+  .transport {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  button.start {
+    background: var(--teal);
+    color: #06110e;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  button.start:disabled { opacity: 0.4; cursor: default; }
+  .status { font-size: 11px; color: var(--text-dim); }
+
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="breathe"></div>
+
+<div class="panel">
+  <h1>Synththulhu</h1>
+  <p class="subtitle">web drone synth — 4 oscillators, pitch &amp; volume drift, quantizer</p>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="transport">
+    <button class="start" id="startBtn">Start Audio</button>
+    <span class="status" id="status">audio stopped</span>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// Constants shared with the AudioWorklet processor (kept in sync manually
+// since the processor runs in its own isolated scope)
+// =====================================================================
+const SCALE_NAMES = ['off', 'major', 'minor', 'pentatonic', 'whole tone'];
+
+// =====================================================================
+// AudioWorklet processor source, loaded via a Blob URL so this whole
+// synth lives in one self-contained file with no separate hosting needed
+// for the worklet module.
+// =====================================================================
+const PROCESSOR_SRC = `
+class DroneProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors() { return []; }
+
+  constructor() {
+    super();
+    this.ROOT_FREQ = 261.6256; // C4
+    this.TUNE_RANGE_SEMITONES = 48; // +/-24 semitones -> C2..C6
+
+    this.DRIFT_MAX_SEMITONES = 2.0;
+    this.VOL_DRIFT_MAX_AMOUNT = 1.0;
+
+    this.GAIN_SINE = 0.8165;
+    this.GAIN_TRI = 1.0;
+    this.GAIN_SAW = 1.0;
+    this.GAIN_SQR = 0.5774;
+
+    this.SCALE_MASKS = [
+      null, // 0 = off
+      [1,0,1,0,1,1,0,1,0,1,0,1], // major
+      [1,0,1,1,0,1,0,1,1,0,1,0], // natural minor
+      [1,0,1,0,1,0,0,1,0,1,0,0], // major pentatonic
+      [1,0,1,0,1,0,1,0,1,0,1,0], // whole tone
+    ];
+
+    this.scaleIndex = 0;
+    this.driftDepth = 0;
+    this.driftSpeed = 0;
+    this.volDriftDepth = 0;
+    this.volDriftSpeed = 0;
+    this.glideSeconds = 0.05;
+    this.ampTauSeconds = 0.01;
+
+    this.oscs = [];
+    for (let i = 0; i < 4; i++) {
+      this.oscs.push({
+        tuneNorm: 0.5, waveNorm: 0, volNorm: 0.7, switchOn: true,
+        phase: Math.random(),
+        targetSemis: 0, currentSemis: 0,
+        waveMorphTarget: 0, waveMorphCurrent: 0,
+        ampTarget: 0, ampCurrent: 0,
+        driftCurrent: 0, driftTarget: 0, nextDriftTime: 0,
+        volDriftCurrent: 0, volDriftTarget: 0, nextVolDriftTime: 0,
+      });
+    }
+
+    this.port.onmessage = (e) => {
+      const m = e.data;
+      if (m.type === 'osc') {
+        const o = this.oscs[m.index];
+        if (o) {
+          if (m.tune !== undefined) o.tuneNorm = m.tune;
+          if (m.wave !== undefined) o.waveNorm = m.wave;
+          if (m.vol !== undefined) o.volNorm = m.vol;
+          if (m.on !== undefined) o.switchOn = m.on;
+        }
+      } else if (m.type === 'global') {
+        if (m.driftDepth !== undefined) this.driftDepth = m.driftDepth;
+        if (m.driftSpeed !== undefined) this.driftSpeed = m.driftSpeed;
+        if (m.volDriftDepth !== undefined) this.volDriftDepth = m.volDriftDepth;
+        if (m.volDriftSpeed !== undefined) this.volDriftSpeed = m.volDriftSpeed;
+        if (m.glideSeconds !== undefined) this.glideSeconds = m.glideSeconds;
+        if (m.scaleIndex !== undefined) this.scaleIndex = m.scaleIndex;
+      }
+    };
+  }
+
+  quantize(semis, scaleIdx) {
+    if (scaleIdx === 0) return semis;
+    const mask = this.SCALE_MASKS[scaleIdx];
+    const nearest = Math.round(semis);
+    for (let offset = 0; offset <= 12; offset++) {
+      const up = nearest + offset;
+      if (mask[((up % 12) + 12) % 12]) return up;
+      const down = nearest - offset;
+      if (mask[((down % 12) + 12) % 12]) return down;
+    }
+    return semis;
+  }
+
+  speedToTau(speed, tauSlow, tauFast) {
+    // 0 = frozen entirely (handled by caller), else lerp slow->fast
+    return tauSlow + (tauFast - tauSlow) * speed;
+  }
+
+  waveValue(idx, phase) {
+    switch (idx) {
+      case 0: return Math.sin(phase * 2 * Math.PI) * this.GAIN_SINE;
+      case 1: {
+        const tri = phase < 0.5 ? (phase * 4 - 1) : (3 - phase * 4);
+        return tri * this.GAIN_TRI;
+      }
+      case 2: return (phase * 2 - 1) * this.GAIN_SAW;
+      default: return (phase < 0.5 ? 1 : -1) * this.GAIN_SQR;
+    }
+  }
+
+  blendedWave(morphPos, phase) {
+    let pos = morphPos;
+    if (pos < 0) pos = 0;
+    if (pos > 3) pos = 3;
+    let lowIdx = Math.floor(pos);
+    if (lowIdx > 2) lowIdx = 2;
+    const frac = pos - lowIdx;
+    const a = this.waveValue(lowIdx, phase);
+    const b = this.waveValue(lowIdx + 1, phase);
+    return a * (1 - frac) + b * frac;
+  }
+
+  updateControlRate(dtControl) {
+    const now = currentTime;
+
+    for (let i = 0; i < 4; i++) {
+      const o = this.oscs[i];
+      const affectedByDrift = (i !== 0);
+
+      // pitch drift (oscillators 2-4 only)
+      if (affectedByDrift) {
+        if (this.driftSpeed > 0) {
+          const tau = this.speedToTau(this.driftSpeed, 2.0, 0.02);
+          const smooth = 1 - Math.exp(-dtControl / tau);
+          o.driftCurrent += (o.driftTarget - o.driftCurrent) * smooth;
+        }
+        if (now >= o.nextDriftTime) {
+          o.driftTarget = (Math.random() * 2 - 1);
+          const slowMin = 4.0, slowMax = 9.0, fastMin = 0.2, fastMax = 0.6;
+          const minS = slowMin + (fastMin - slowMin) * this.driftSpeed;
+          const maxS = slowMax + (fastMax - slowMax) * this.driftSpeed;
+          o.nextDriftTime = now + (minS + Math.random() * (maxS - minS));
+        }
+      }
+
+      // volume drift (all 4 oscillators)
+      if (this.volDriftSpeed > 0) {
+        const tau = this.speedToTau(this.volDriftSpeed, 2.0, 0.02);
+        const smooth = 1 - Math.exp(-dtControl / tau);
+        o.volDriftCurrent += (o.volDriftTarget - o.volDriftCurrent) * smooth;
+      }
+      if (now >= o.nextVolDriftTime) {
+        o.volDriftTarget = (Math.random() * 2 - 1);
+        const slowMin = 4.0, slowMax = 9.0, fastMin = 0.1, fastMax = 0.3;
+        const minS = slowMin + (fastMin - slowMin) * this.volDriftSpeed;
+        const maxS = slowMax + (fastMax - slowMax) * this.volDriftSpeed;
+        o.nextVolDriftTime = now + (minS + Math.random() * (maxS - minS));
+      }
+
+      // pitch target
+      const tuneSemitones = (o.tuneNorm - 0.5) * this.TUNE_RANGE_SEMITONES;
+      let semis = tuneSemitones;
+      if (affectedByDrift) {
+        semis += o.driftCurrent * this.driftDepth * this.DRIFT_MAX_SEMITONES;
+        semis = this.quantize(semis, this.scaleIndex);
+      }
+      o.targetSemis = semis;
+
+      // glide
+      const glideSmooth = 1 - Math.exp(-dtControl / Math.max(this.glideSeconds, 0.001));
+      o.currentSemis += (o.targetSemis - o.currentSemis) * glideSmooth;
+
+      // wave morph
+      o.waveMorphTarget = o.waveNorm * 3;
+      o.waveMorphCurrent += (o.waveMorphTarget - o.waveMorphCurrent) * glideSmooth;
+
+      // volume (slider +/- drift), clamped
+      let volLevel = o.volNorm + o.volDriftCurrent * this.volDriftDepth * this.VOL_DRIFT_MAX_AMOUNT;
+      if (volLevel < 0) volLevel = 0;
+      if (volLevel > 1) volLevel = 1;
+      o.ampTarget = o.switchOn ? volLevel : 0;
+    }
+  }
+
+  process(inputs, outputs) {
+    const output = outputs[0];
+    const ch = output[0];
+    const n = ch.length;
+
+    this.updateControlRate(n / sampleRate);
+
+    const ampSmoothPerSample = 1 - Math.exp(-(1 / sampleRate) / this.ampTauSeconds);
+
+    for (let s = 0; s < n; s++) {
+      let mix = 0;
+      for (let i = 0; i < 4; i++) {
+        const o = this.oscs[i];
+        const freqHz = this.ROOT_FREQ * Math.pow(2, o.currentSemis / 12);
+        o.phase += freqHz / sampleRate;
+        if (o.phase >= 1) o.phase -= 1;
+
+        o.ampCurrent += (o.ampTarget - o.ampCurrent) * ampSmoothPerSample;
+        const wave = this.blendedWave(o.waveMorphCurrent, o.phase);
+        mix += wave * o.ampCurrent;
+      }
+      const sample = mix / 4;
+      for (let c = 0; c < output.length; c++) {
+        output[c][s] = sample;
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('drone-processor', DroneProcessor);
+`;
+
+// =====================================================================
+// Main thread: audio setup + UI
+// =====================================================================
+
+let audioCtx = null;
+let workletNode = null;
+let scaleIndex = 0;
+
+const oscState = [0,1,2,3].map(() => ({ tune: 0.5, wave: 0, vol: 0.7, on: true }));
+const globalState = { driftDepth: 0, driftSpeed: 0, volDriftDepth: 0, volDriftSpeed: 0, glideSeconds: 0.05 };
+
+function sendOsc(index) {
+  if (!workletNode) return;
+  workletNode.port.postMessage({ type: 'osc', index, ...oscState[index] === undefined ? {} : { tune: oscState[index].tune, wave: oscState[index].wave, vol: oscState[index].vol, on: oscState[index].on } });
+}
+
+function sendGlobal() {
+  if (!workletNode) return;
+  workletNode.port.postMessage({ type: 'global', ...globalState, scaleIndex });
+}
+
+// ---- knob widget (vertical drag) ----
+function createKnob(label, min, max, initial, onChange, format) {
+  const wrap = document.createElement('div');
+  wrap.className = 'knob-wrap';
+
+  const knob = document.createElement('div');
+  knob.className = 'knob';
+
+  const labelEl = document.createElement('div');
+  labelEl.className = 'knob-label';
+  labelEl.textContent = label;
+
+  const valEl = document.createElement('div');
+  valEl.className = 'knob-val';
+
+  let value = initial;
+
+  function render() {
+    const norm = (value - min) / (max - min);
+    const angle = -135 + norm * 270;
+    knob.style.setProperty('--angle', angle + 'deg');
+    valEl.textContent = format ? format(value) : value.toFixed(2);
+  }
+
+  function setValue(v) {
+    value = Math.min(max, Math.max(min, v));
+    render();
+    onChange(value);
+  }
+
+  let dragging = false;
+  let startY = 0;
+  let startVal = 0;
+
+  knob.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startY = e.clientY;
+    startVal = value;
+    knob.setPointerCapture(e.pointerId);
+  });
+  knob.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dy = startY - e.clientY;
+    const range = max - min;
+    setValue(startVal + (dy / 150) * range);
+  });
+  knob.addEventListener('pointerup', () => { dragging = false; });
+  knob.addEventListener('pointercancel', () => { dragging = false; });
+
+  render();
+  wrap.appendChild(knob);
+  wrap.appendChild(labelEl);
+  wrap.appendChild(valEl);
+  return { el: wrap, setValue, getValue: () => value };
+}
+
+function buildUI() {
+  const grid = document.getElementById('grid');
+
+  for (let i = 0; i < 4; i++) {
+    const col = document.createElement('div');
+    col.className = 'osc-col';
+
+    const colLabel = document.createElement('div');
+    colLabel.className = 'col-label';
+    colLabel.textContent = 'osc ' + (i + 1);
+    col.appendChild(colLabel);
+
+    const tuneKnob = createKnob('tune', 0, 1, 0.5, (v) => {
+      oscState[i].tune = v; sendOsc(i);
+    }, (v) => v.toFixed(2));
+    col.appendChild(tuneKnob.el);
+
+    const waveKnob = createKnob('wave', 0, 1, 0, (v) => {
+      oscState[i].wave = v; sendOsc(i);
+    }, (v) => v.toFixed(2));
+    col.appendChild(waveKnob.el);
+
+    const sliderWrap = document.createElement('div');
+    sliderWrap.className = 'vslider-wrap';
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    slider.className = 'vslider';
+    slider.min = 0; slider.max = 1; slider.step = 0.01; slider.value = 0.7;
+    slider.addEventListener('input', () => {
+      oscState[i].vol = parseFloat(slider.value); sendOsc(i);
+    });
+    const sliderLabel = document.createElement('div');
+    sliderLabel.className = 'knob-label';
+    sliderLabel.textContent = 'vol';
+    sliderWrap.appendChild(slider);
+    sliderWrap.appendChild(sliderLabel);
+    col.appendChild(sliderWrap);
+
+    const led = document.createElement('div');
+    led.className = 'led on';
+
+    const sw = document.createElement('div');
+    sw.className = 'switch on';
+    sw.addEventListener('click', () => {
+      oscState[i].on = !oscState[i].on;
+      sw.classList.toggle('on', oscState[i].on);
+      led.classList.toggle('on', oscState[i].on);
+      sendOsc(i);
+    });
+    col.appendChild(sw);
+    col.appendChild(led);
+
+    grid.appendChild(col);
+  }
+
+  // global column
+  const gcol = document.createElement('div');
+  gcol.className = 'global-col';
+  const gLabel = document.createElement('div');
+  gLabel.className = 'col-label';
+  gLabel.textContent = 'global';
+  gcol.appendChild(gLabel);
+
+  const driftDepthKnob = createKnob('drift depth', 0, 1, 0, (v) => {
+    globalState.driftDepth = v; sendGlobal();
+  });
+  gcol.appendChild(driftDepthKnob.el);
+
+  const driftSpeedKnob = createKnob('drift speed', 0, 1, 0, (v) => {
+    globalState.driftSpeed = v; sendGlobal();
+  });
+  gcol.appendChild(driftSpeedKnob.el);
+
+  const volDriftDepthKnob = createKnob('vol drift depth', 0, 1, 0, (v) => {
+    globalState.volDriftDepth = v; sendGlobal();
+  });
+  gcol.appendChild(volDriftDepthKnob.el);
+
+  const volDriftSpeedKnob = createKnob('vol drift speed', 0, 1, 0, (v) => {
+    globalState.volDriftSpeed = v; sendGlobal();
+  });
+  gcol.appendChild(volDriftSpeedKnob.el);
+
+  const glideKnob = createKnob('glide (s)', 0.005, 1, 0.05, (v) => {
+    globalState.glideSeconds = v; sendGlobal();
+  }, (v) => v.toFixed(2));
+  gcol.appendChild(glideKnob.el);
+
+  const scaleRow = document.createElement('div');
+  scaleRow.className = 'scale-row';
+  const scaleLeds = [];
+  for (let s = 0; s < 4; s++) {
+    const led = document.createElement('div');
+    led.className = 'led';
+    scaleLeds.push(led);
+    scaleRow.appendChild(led);
+  }
+  gcol.appendChild(scaleRow);
+
+  const scaleNameEl = document.createElement('div');
+  scaleNameEl.className = 'knob-val';
+  scaleNameEl.textContent = SCALE_NAMES[0];
+  gcol.appendChild(scaleNameEl);
+
+  const punchBtn = document.createElement('button');
+  punchBtn.className = 'punch';
+  punchBtn.textContent = 'punch';
+  punchBtn.addEventListener('click', () => {
+    scaleIndex = (scaleIndex + 1) % 5;
+    scaleLeds.forEach((l, idx) => l.classList.toggle('on', scaleIndex !== 0 && idx === scaleIndex - 1));
+    scaleNameEl.textContent = SCALE_NAMES[scaleIndex];
+    sendGlobal();
+  });
+  gcol.appendChild(punchBtn);
+
+  grid.appendChild(gcol);
+}
+
+async function startAudio() {
+  const startBtn = document.getElementById('startBtn');
+  const status = document.getElementById('status');
+  startBtn.disabled = true;
+  status.textContent = 'starting...';
+
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const blob = new Blob([PROCESSOR_SRC], { type: 'application/javascript' });
+  const url = URL.createObjectURL(blob);
+  await audioCtx.audioWorklet.addModule(url);
+
+  workletNode = new AudioWorkletNode(audioCtx, 'drone-processor', { outputChannelCount: [2] });
+  workletNode.connect(audioCtx.destination);
+
+  // push current UI state to the processor now that it exists
+  for (let i = 0; i < 4; i++) sendOsc(i);
+  sendGlobal();
+
+  status.textContent = 'running — sample rate ' + audioCtx.sampleRate + 'Hz';
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  startAudio();
+});
+
+buildUI();
+</script>
+</body>
+</html>
