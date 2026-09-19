@@ -3,244 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Synththulhu — Drone Synth</title>
+<title>Synththulhu v2 — Web</title>
 <style>
   :root {
-    --bg: #07100e;
-    --panel: #0f1c19;
-    --panel-edge: #1c332d;
-    --teal: #4fe3c9;
-    --teal-dim: #2a5f55;
-    --red: #ff5252;
-    --text: #e7f3ef;
-    --text-dim: #7f9c95;
-    --mono: 'JetBrains Mono', 'Courier New', monospace;
+    --bg: #07100e; --panel: #0f1c19; --panel-edge: #1c332d;
+    --teal: #4fe3c9; --teal-dim: #2a5f55; --red: #ff5252;
+    --text: #e7f3ef; --text-dim: #7f9c95; --mono: 'JetBrains Mono','Courier New',monospace;
   }
-
   * { box-sizing: border-box; }
-
   body {
-    margin: 0;
-    min-height: 100vh;
+    margin: 0; min-height: 100vh;
     background: radial-gradient(ellipse at 50% 20%, #0d1c19 0%, var(--bg) 60%);
-    color: var(--text);
-    font-family: var(--mono);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
+    color: var(--text); font-family: var(--mono);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
   }
-
   .breathe {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
+    position: fixed; inset: 0; pointer-events: none;
     background: radial-gradient(circle at 50% 40%, rgba(79,227,201,0.10) 0%, rgba(79,227,201,0) 60%);
     animation: breathe 8s ease-in-out infinite;
   }
-  @keyframes breathe {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.9; transform: scale(1.08); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .breathe { animation: none; }
-  }
+  @keyframes breathe { 0%,100%{opacity:.4;transform:scale(1);} 50%{opacity:.9;transform:scale(1.08);} }
+  @media (prefers-reduced-motion: reduce) { .breathe { animation: none; } }
 
   .panel {
-    position: relative;
-    background: var(--panel);
-    border: 1px solid var(--panel-edge);
-    border-radius: 10px;
-    padding: 28px 24px;
-    box-shadow: 0 0 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(79,227,201,0.03);
-    max-width: 980px;
-    width: 100%;
+    position: relative; background: var(--panel); border: 1px solid var(--panel-edge);
+    border-radius: 10px; padding: 24px 20px;
+    box-shadow: 0 0 60px rgba(0,0,0,.5), inset 0 0 40px rgba(79,227,201,.03);
+    max-width: 1180px; width: 100%;
   }
+  h1 { font-size: 13px; letter-spacing:.25em; text-transform:uppercase; color:var(--teal); margin:0 0 3px; font-weight:600; }
+  .subtitle { font-size: 11px; color: var(--text-dim); margin: 0 0 18px; letter-spacing:.04em; }
 
-  h1 {
-    font-size: 13px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--teal);
-    margin: 0 0 4px 0;
-    font-weight: 600;
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr) 1.5fr; gap: 14px; }
+  .col {
+    background: rgba(0,0,0,.2); border: 1px solid var(--panel-edge); border-radius: 8px;
+    padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px;
   }
-  .subtitle {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin: 0 0 22px 0;
-    letter-spacing: 0.05em;
-  }
+  .col-label { font-size: 10px; letter-spacing:.14em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
+  .sec-label { font-size: 9px; letter-spacing:.1em; color: var(--teal-dim); text-transform: uppercase; margin-top: 8px; }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr) 1.3fr;
-    gap: 18px;
-  }
-
-  .osc-col, .global-col {
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--panel-edge);
-    border-radius: 8px;
-    padding: 14px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .col-label {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 2px;
-  }
-
-  .knob-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    user-select: none;
-  }
+  .knob-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; user-select: none; }
   .knob {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
+    width: 46px; height: 46px; border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #1c332d, #0a1512 70%);
-    border: 1px solid var(--panel-edge);
-    position: relative;
-    cursor: ns-resize;
-    touch-action: none;
+    border: 1px solid var(--panel-edge); position: relative; cursor: ns-resize; touch-action: none;
   }
   .knob::after {
-    content: '';
-    position: absolute;
-    top: 5px;
-    left: 50%;
-    width: 2px;
-    height: 18px;
-    background: var(--teal);
-    transform-origin: 50% 21px;
-    transform: translateX(-50%) rotate(var(--angle, 0deg));
-    border-radius: 1px;
-    box-shadow: 0 0 6px var(--teal);
+    content:''; position:absolute; top:4px; left:50%; width:2px; height:16px; background:var(--teal);
+    transform-origin: 50% 19px; transform: translateX(-50%) rotate(var(--angle,0deg));
+    border-radius:1px; box-shadow:0 0 6px var(--teal);
   }
-  .knob-label {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-  .knob-val {
-    font-size: 9px;
-    color: var(--teal-dim);
-  }
+  .knob-label { font-size: 8.5px; color: var(--text-dim); letter-spacing:.08em; text-transform: uppercase; }
+  .knob-val { font-size: 8.5px; color: var(--teal-dim); }
 
-  .vslider-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
   input[type="range"].vslider {
-    writing-mode: vertical-lr;
-    direction: rtl;
-    width: 20px;
-    height: 90px;
-    accent-color: var(--teal);
-    background: transparent;
+    writing-mode: vertical-lr; direction: rtl; width: 18px; height: 76px;
+    accent-color: var(--teal); background: transparent;
   }
 
   .switch {
-    width: 40px;
-    height: 20px;
-    border-radius: 10px;
-    background: #1c332d;
-    border: 1px solid var(--panel-edge);
-    position: relative;
-    cursor: pointer;
+    width: 36px; height: 18px; border-radius: 9px; background:#1c332d;
+    border: 1px solid var(--panel-edge); position: relative; cursor: pointer;
   }
   .switch.on { background: var(--teal-dim); }
   .switch::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--text-dim);
-    transition: left 0.15s ease, background 0.15s ease;
+    content:''; position:absolute; top:2px; left:2px; width:12px; height:12px;
+    border-radius:50%; background:var(--text-dim); transition:left .15s,background .15s;
   }
-  .switch.on::after {
-    left: 22px;
-    background: var(--teal);
-    box-shadow: 0 0 8px var(--teal);
+  .switch.on::after { left:20px; background:var(--teal); box-shadow:0 0 8px var(--teal); }
+
+  .led { width:8px; height:8px; border-radius:50%; background:#3a1414; box-shadow: inset 0 0 3px rgba(0,0,0,.6); }
+  .led.on { background: var(--red); box-shadow: 0 0 8px var(--red), 0 0 2px var(--red); }
+  .led-row { display: flex; gap: 5px; }
+
+  button.mini {
+    background: var(--panel-edge); color: var(--text); border: 1px solid var(--teal-dim);
+    border-radius: 14px; padding: 5px 12px; font-family: var(--mono); font-size: 9px;
+    letter-spacing:.08em; text-transform: uppercase; cursor: pointer;
+  }
+  button.mini:hover { border-color: var(--teal); color: var(--teal); }
+  button.mini:active { transform: scale(.96); }
+
+  .xypad {
+    width: 130px; height: 130px; border-radius: 8px; background: rgba(0,0,0,.25);
+    border: 1px solid var(--panel-edge); position: relative; cursor: crosshair; touch-action: none;
+  }
+  .xypad::before, .xypad::after {
+    content:''; position:absolute; background: var(--panel-edge);
+  }
+  .xypad::before { left:0; right:0; top:50%; height:1px; }
+  .xypad::after { top:0; bottom:0; left:50%; width:1px; }
+  .xy-dot {
+    position:absolute; width:10px; height:10px; border-radius:50%; background:var(--teal);
+    box-shadow:0 0 8px var(--teal); transform:translate(-50%,-50%); pointer-events:none;
   }
 
-  .led {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: #3a1414;
-    box-shadow: inset 0 0 3px rgba(0,0,0,0.6);
-  }
-  .led.on {
-    background: var(--red);
-    box-shadow: 0 0 8px var(--red), 0 0 2px var(--red);
-  }
-
-  .scale-row { display: flex; gap: 6px; }
-
-  button.punch {
-    background: var(--panel-edge);
-    color: var(--text);
-    border: 1px solid var(--teal-dim);
-    border-radius: 16px;
-    padding: 6px 16px;
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: pointer;
-  }
-  button.punch:hover { border-color: var(--teal); color: var(--teal); }
-
-  .transport {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
+  .transport { margin-top: 18px; display:flex; align-items:center; gap:12px; flex-wrap: wrap; }
   button.start {
-    background: var(--teal);
-    color: #06110e;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 22px;
-    font-family: var(--mono);
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: pointer;
+    background: var(--teal); color:#06110e; border:none; border-radius:6px; padding:9px 20px;
+    font-family: var(--mono); font-weight:700; font-size:11px; letter-spacing:.1em;
+    text-transform: uppercase; cursor:pointer;
   }
-  button.start:disabled { opacity: 0.4; cursor: default; }
-  .status { font-size: 11px; color: var(--text-dim); }
+  button.start:disabled { opacity:.4; cursor:default; }
+  .status { font-size: 10px; color: var(--text-dim); }
 
-  @media (max-width: 900px) {
-    .grid { grid-template-columns: repeat(2, 1fr); }
-  }
+  @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
 <div class="breathe"></div>
 
 <div class="panel">
-  <h1>Synththulhu</h1>
-  <p class="subtitle">web drone synth — 4 oscillators, pitch &amp; volume drift, quantizer</p>
+  <h1>Synththulhu v2</h1>
+  <p class="subtitle">web port — 4 oscillators, drift, quantizer, chord/chaos, filter, clock trigger</p>
 
   <div class="grid" id="grid"></div>
 
@@ -251,213 +126,273 @@
 </div>
 
 <script>
-// =====================================================================
-// Constants shared with the AudioWorklet processor (kept in sync manually
-// since the processor runs in its own isolated scope)
-// =====================================================================
-const SCALE_NAMES = ['off', 'major', 'minor', 'pentatonic', 'whole tone'];
+const SCALE_NAMES = ['off','major','minor','pentatonic','whole tone'];
 
 // =====================================================================
-// AudioWorklet processor source, loaded via a Blob URL so this whole
-// synth lives in one self-contained file with no separate hosting needed
-// for the worklet module.
+// AudioWorklet processor — ported from the current Teensy firmware
 // =====================================================================
 const PROCESSOR_SRC = `
 class DroneProcessor extends AudioWorkletProcessor {
-  static get parameterDescriptors() { return []; }
-
   constructor() {
     super();
-    this.ROOT_FREQ = 261.6256; // C4
-    this.TUNE_RANGE_SEMITONES = 48; // +/-24 semitones -> C2..C6
+    this.ROOT_FREQ = 261.6256;
+    this.TUNE_MIN = -24, this.TUNE_MAX = 24;
 
     this.DRIFT_MAX_SEMITONES = 2.0;
-    this.VOL_DRIFT_MAX_AMOUNT = 1.0;
+    this.DRIFT_TAU_SLOW = 2.0; this.DRIFT_TAU_FAST = 0.02;
+    this.DRIFT_INT_SLOW = [4.0, 9.0]; this.DRIFT_INT_FAST = [0.2, 0.6];
 
-    this.GAIN_SINE = 0.8165;
-    this.GAIN_TRI = 1.0;
-    this.GAIN_SAW = 1.0;
-    this.GAIN_SQR = 0.5774;
+    this.VOL_DRIFT_MAX = 1.0;
+    this.VOL_DRIFT_TAU_SLOW = 2.0; this.VOL_DRIFT_TAU_FAST = 0.01;
+    this.VOL_DRIFT_INT_SLOW = [4.0, 9.0]; this.VOL_DRIFT_INT_FAST = [0.1, 0.3];
+
+    this.TRIGGER_DRIFT_TAU = 0.30;
+    this.TRIGGER_DRIFT_DONE = 0.01;
+
+    this.GLIDE_TAU_MIN = 0.005; this.GLIDE_TAU_MAX = 1.0;
+
+    this.GAIN_SINE = 0.8165, this.GAIN_TRI = 1.0, this.GAIN_SAW = 1.0, this.GAIN_SQR = 0.5774;
 
     this.SCALE_MASKS = [
-      null, // 0 = off
-      [1,0,1,0,1,1,0,1,0,1,0,1], // major
-      [1,0,1,1,0,1,0,1,1,0,1,0], // natural minor
-      [1,0,1,0,1,0,0,1,0,1,0,0], // major pentatonic
-      [1,0,1,0,1,0,1,0,1,0,1,0], // whole tone
+      null,
+      [1,0,1,0,1,1,0,1,0,1,0,1],
+      [1,0,1,1,0,1,0,1,1,0,1,0],
+      [1,0,1,0,1,0,0,1,0,1,0,0],
+      [1,0,1,0,1,0,1,0,1,0,1,0],
     ];
 
-    this.scaleIndex = 0;
-    this.driftDepth = 0;
-    this.driftSpeed = 0;
-    this.volDriftDepth = 0;
-    this.volDriftSpeed = 0;
-    this.glideSeconds = 0.05;
-    this.ampTauSeconds = 0.01;
+    this.currentScale = 0;
+    this.driftDepth = 0; this.driftSpeed = 0;
+    this.volDriftDepth = 0; this.volDriftSpeed = 0;
+    this.glideSeconds = this.GLIDE_TAU_MIN;
+    this.chordModeActive = false;
+    this.waveBlendModeActive = true;
+
+    this.chaosModeActive = false;
+    this.chaosSnap = {};
 
     this.oscs = [];
     for (let i = 0; i < 4; i++) {
       this.oscs.push({
-        tuneNorm: 0.5, waveNorm: 0, volNorm: 0.7, switchOn: true,
-        phase: Math.random(),
-        targetSemis: 0, currentSemis: 0,
-        waveMorphTarget: 0, waveMorphCurrent: 0,
+        storedTune: 0, targetSemis: 0, currentSemis: 0,
+        phase: Math.random(), waveMorphTarget: 0, waveMorphCurrent: 0,
         ampTarget: 0, ampCurrent: 0,
-        driftCurrent: 0, driftTarget: 0, nextDriftTime: 0,
-        volDriftCurrent: 0, volDriftTarget: 0, nextVolDriftTime: 0,
+        driftCurrent: 0, driftTarget: 0, nextDriftAt: 0, triggerDriftActive: false,
+        volDriftCurrent: 0, volDriftTarget: 0, nextVolDriftAt: 0,
+        waveNorm: 0, volNorm: 0.7,
+        chaosTune: 0, chaosWave: 0, chaosVol: 0,
       });
     }
 
-    this.port.onmessage = (e) => {
-      const m = e.data;
-      if (m.type === 'osc') {
-        const o = this.oscs[m.index];
-        if (o) {
-          if (m.tune !== undefined) o.tuneNorm = m.tune;
-          if (m.wave !== undefined) o.waveNorm = m.wave;
-          if (m.vol !== undefined) o.volNorm = m.vol;
-          if (m.on !== undefined) o.switchOn = m.on;
-        }
-      } else if (m.type === 'global') {
-        if (m.driftDepth !== undefined) this.driftDepth = m.driftDepth;
-        if (m.driftSpeed !== undefined) this.driftSpeed = m.driftSpeed;
-        if (m.volDriftDepth !== undefined) this.volDriftDepth = m.volDriftDepth;
-        if (m.volDriftSpeed !== undefined) this.volDriftSpeed = m.volDriftSpeed;
-        if (m.glideSeconds !== undefined) this.glideSeconds = m.glideSeconds;
-        if (m.scaleIndex !== undefined) this.scaleIndex = m.scaleIndex;
+    this.port.onmessage = (e) => this.handleMessage(e.data);
+  }
+
+  handleMessage(m) {
+    if (m.type === 'osc') {
+      const o = this.oscs[m.index];
+      if (!o) return;
+      if (m.wave !== undefined) o.waveNorm = m.wave;
+      if (m.vol !== undefined) o.volNorm = m.vol;
+    } else if (m.type === 'global') {
+      if (m.driftDepth !== undefined) this.driftDepth = m.driftDepth;
+      if (m.driftSpeed !== undefined) this.driftSpeed = m.driftSpeed;
+      if (m.volDriftDepth !== undefined) this.volDriftDepth = m.volDriftDepth;
+      if (m.volDriftSpeed !== undefined) this.volDriftSpeed = m.volDriftSpeed;
+      if (m.glideSeconds !== undefined) this.glideSeconds = m.glideSeconds;
+      if (m.currentScale !== undefined) this.currentScale = m.currentScale;
+      if (m.chordModeActive !== undefined) this.chordModeActive = m.chordModeActive;
+      if (m.waveBlendModeActive !== undefined) this.waveBlendModeActive = m.waveBlendModeActive;
+    } else if (m.type === 'setTune') {
+      this.oscs[m.index].storedTune = m.value;
+    } else if (m.type === 'trigger') {
+      const now = currentTime;
+      for (let i = 1; i < 4; i++) {
+        const o = this.oscs[i];
+        o.driftTarget = Math.random()*2-1;
+        o.triggerDriftActive = true;
+        const [minS,maxS0] = this.DRIFT_INT_SLOW, [minF,maxF] = this.DRIFT_INT_FAST;
+        const mn = minS + this.driftSpeed*(minF-minS), mx = maxS0 + this.driftSpeed*(maxF-maxS0);
+        o.nextDriftAt = now + mn + Math.random()*(mx-mn);
       }
-    };
+    } else if (m.type === 'chaosActivate') {
+      this.chaosModeActive = true;
+      const snap = { osc: [] };
+      for (let i = 0; i < 4; i++) {
+        this.oscs[i].chaosTune = this.TUNE_MIN + Math.random()*(this.TUNE_MAX-this.TUNE_MIN);
+        this.oscs[i].chaosWave = Math.random()*3;
+        this.oscs[i].chaosVol = Math.random();
+      }
+      snap.driftDepth = Math.random(); snap.driftSpeed = Math.random();
+      snap.volDriftDepth = Math.random(); snap.volDriftSpeed = Math.random();
+      snap.glideSeconds = this.GLIDE_TAU_MIN + Math.random()*(this.GLIDE_TAU_MAX-this.GLIDE_TAU_MIN);
+      snap.scale = Math.floor(Math.random()*5);
+      snap.chordMode = Math.random() < 0.5;
+      this.chaosSnap = snap;
+    } else if (m.type === 'chaosDeactivate') {
+      this.chaosModeActive = false;
+    }
   }
 
   quantize(semis, scaleIdx) {
     if (scaleIdx === 0) return semis;
     const mask = this.SCALE_MASKS[scaleIdx];
     const nearest = Math.round(semis);
-    for (let offset = 0; offset <= 12; offset++) {
-      const up = nearest + offset;
-      if (mask[((up % 12) + 12) % 12]) return up;
-      const down = nearest - offset;
-      if (mask[((down % 12) + 12) % 12]) return down;
+    for (let off = 0; off <= 12; off++) {
+      const up = nearest+off; if (mask[((up%12)+12)%12]) return up;
+      const dn = nearest-off; if (mask[((dn%12)+12)%12]) return dn;
     }
     return semis;
   }
 
-  speedToTau(speed, tauSlow, tauFast) {
-    // 0 = frozen entirely (handled by caller), else lerp slow->fast
-    return tauSlow + (tauFast - tauSlow) * speed;
+  scaleNotes(scaleIdx) {
+    if (scaleIdx === 0) return [];
+    const mask = this.SCALE_MASKS[scaleIdx];
+    const notes = [];
+    for (let i = 0; i < 12; i++) if (mask[i]) notes.push(i);
+    return notes;
   }
+
+  chordTone(root, position, notes) {
+    if (notes.length === 0) return root;
+    const idx = position % notes.length, oct = Math.floor(position/notes.length);
+    return root + notes[idx] + 12*oct;
+  }
+
+  speedToTau(speed, slow, fast) { return slow + (fast-slow)*speed; }
 
   waveValue(idx, phase) {
     switch (idx) {
-      case 0: return Math.sin(phase * 2 * Math.PI) * this.GAIN_SINE;
-      case 1: {
-        const tri = phase < 0.5 ? (phase * 4 - 1) : (3 - phase * 4);
-        return tri * this.GAIN_TRI;
-      }
-      case 2: return (phase * 2 - 1) * this.GAIN_SAW;
-      default: return (phase < 0.5 ? 1 : -1) * this.GAIN_SQR;
+      case 0: return Math.sin(phase*2*Math.PI) * this.GAIN_SINE;
+      case 1: { const t = phase<0.5 ? phase*4-1 : 3-phase*4; return t*this.GAIN_TRI; }
+      case 2: return (phase*2-1) * this.GAIN_SAW;
+      default: return (phase<0.5?1:-1) * this.GAIN_SQR;
     }
   }
 
-  blendedWave(morphPos, phase) {
-    let pos = morphPos;
-    if (pos < 0) pos = 0;
-    if (pos > 3) pos = 3;
-    let lowIdx = Math.floor(pos);
-    if (lowIdx > 2) lowIdx = 2;
-    const frac = pos - lowIdx;
-    const a = this.waveValue(lowIdx, phase);
-    const b = this.waveValue(lowIdx + 1, phase);
-    return a * (1 - frac) + b * frac;
+  blendedWave(morphPos, phase, blend) {
+    let pos = Math.max(0, Math.min(3, morphPos));
+    if (!blend) return this.waveValue(Math.round(pos), phase);
+    let lo = Math.floor(pos); if (lo>2) lo=2;
+    const frac = pos-lo;
+    return this.waveValue(lo,phase)*(1-frac) + this.waveValue(lo+1,phase)*frac;
   }
 
-  updateControlRate(dtControl) {
+  updateOscDrift(o, i, dt) {
+    const affected = i !== 0;
+    if (!affected) return;
     const now = currentTime;
+    let tau = 0;
+    if (o.triggerDriftActive) tau = this.TRIGGER_DRIFT_TAU;
+    else if (this.driftSpeed > 0) tau = this.speedToTau(this.driftSpeed, this.DRIFT_TAU_SLOW, this.DRIFT_TAU_FAST);
+    if (tau > 0) {
+      const sm = 1 - Math.exp(-dt/tau);
+      o.driftCurrent += (o.driftTarget - o.driftCurrent) * sm;
+    }
+    if (o.triggerDriftActive && Math.abs(o.driftTarget-o.driftCurrent) <= this.TRIGGER_DRIFT_DONE) {
+      o.driftCurrent = o.driftTarget; o.triggerDriftActive = false;
+    }
+    if (now >= o.nextDriftAt) {
+      o.driftTarget = Math.random()*2-1;
+      const [minS,maxS0]=this.DRIFT_INT_SLOW,[minF,maxF]=this.DRIFT_INT_FAST;
+      const mn=minS+this.driftSpeed*(minF-minS), mx=maxS0+this.driftSpeed*(maxF-maxS0);
+      o.nextDriftAt = now + mn + Math.random()*(mx-mn);
+    }
+  }
+
+  updateOscVolDrift(o, dt) {
+    const now = currentTime;
+    if (this.volDriftSpeed > 0) {
+      const tau = this.speedToTau(this.volDriftSpeed, this.VOL_DRIFT_TAU_SLOW, this.VOL_DRIFT_TAU_FAST);
+      const sm = 1 - Math.exp(-dt/tau);
+      o.volDriftCurrent += (o.volDriftTarget - o.volDriftCurrent) * sm;
+    }
+    if (now >= o.nextVolDriftAt) {
+      o.volDriftTarget = Math.random()*2-1;
+      const [minS,maxS0]=this.VOL_DRIFT_INT_SLOW,[minF,maxF]=this.VOL_DRIFT_INT_FAST;
+      const mn=minS+this.volDriftSpeed*(minF-minS), mx=maxS0+this.volDriftSpeed*(maxF-maxS0);
+      o.nextVolDriftAt = now + mn + Math.random()*(mx-mn);
+    }
+  }
+
+  updateControlRate(dt) {
+    const chordNotes = this.scaleNotes(this.chaosModeActive ? this.chaosSnap.scale : this.currentScale);
+    const glideSmooth = 1 - Math.exp(-dt / (this.chaosModeActive ? this.chaosSnap.glideSeconds : this.glideSeconds));
 
     for (let i = 0; i < 4; i++) {
       const o = this.oscs[i];
-      const affectedByDrift = (i !== 0);
 
-      // pitch drift (oscillators 2-4 only)
-      if (affectedByDrift) {
-        if (this.driftSpeed > 0) {
-          const tau = this.speedToTau(this.driftSpeed, 2.0, 0.02);
-          const smooth = 1 - Math.exp(-dtControl / tau);
-          o.driftCurrent += (o.driftTarget - o.driftCurrent) * smooth;
+      if (this.chaosModeActive) {
+        o.waveMorphTarget = o.chaosWave;
+        o.waveMorphCurrent += (o.waveMorphTarget - o.waveMorphCurrent) * glideSmooth;
+        o.ampTarget = o.chaosVol;
+
+        this.updateOscVolDrift(o, dt);
+        this.updateOscDrift(o, i, dt);
+
+        let semis = o.chaosTune;
+        if (this.chaosSnap.chordMode && i !== 0 && this.chaosSnap.scale !== 0) {
+          semis = this.chordTone(this.oscs[0].chaosTune, 2*i, chordNotes);
         }
-        if (now >= o.nextDriftTime) {
-          o.driftTarget = (Math.random() * 2 - 1);
-          const slowMin = 4.0, slowMax = 9.0, fastMin = 0.2, fastMax = 0.6;
-          const minS = slowMin + (fastMin - slowMin) * this.driftSpeed;
-          const maxS = slowMax + (fastMax - slowMax) * this.driftSpeed;
-          o.nextDriftTime = now + (minS + Math.random() * (maxS - minS));
+        if (i !== 0) {
+          semis += o.driftCurrent * this.chaosSnap.driftDepth * this.DRIFT_MAX_SEMITONES;
+          semis = this.quantize(semis, this.chaosSnap.scale);
         }
+        o.targetSemis = semis;
+        o.currentSemis += (o.targetSemis - o.currentSemis) * glideSmooth;
+        const freq = this.ROOT_FREQ * Math.pow(2, o.currentSemis/12);
+        o.phaseInc = freq / sampleRate;
+        continue;
       }
 
-      // volume drift (all 4 oscillators)
-      if (this.volDriftSpeed > 0) {
-        const tau = this.speedToTau(this.volDriftSpeed, 2.0, 0.02);
-        const smooth = 1 - Math.exp(-dtControl / tau);
-        o.volDriftCurrent += (o.volDriftTarget - o.volDriftCurrent) * smooth;
-      }
-      if (now >= o.nextVolDriftTime) {
-        o.volDriftTarget = (Math.random() * 2 - 1);
-        const slowMin = 4.0, slowMax = 9.0, fastMin = 0.1, fastMax = 0.3;
-        const minS = slowMin + (fastMin - slowMin) * this.volDriftSpeed;
-        const maxS = slowMax + (fastMax - slowMax) * this.volDriftSpeed;
-        o.nextVolDriftTime = now + (minS + Math.random() * (maxS - minS));
-      }
-
-      // pitch target
-      const tuneSemitones = (o.tuneNorm - 0.5) * this.TUNE_RANGE_SEMITONES;
-      let semis = tuneSemitones;
-      if (affectedByDrift) {
-        semis += o.driftCurrent * this.driftDepth * this.DRIFT_MAX_SEMITONES;
-        semis = this.quantize(semis, this.scaleIndex);
-      }
-      o.targetSemis = semis;
-
-      // glide
-      const glideSmooth = 1 - Math.exp(-dtControl / Math.max(this.glideSeconds, 0.001));
-      o.currentSemis += (o.targetSemis - o.currentSemis) * glideSmooth;
-
-      // wave morph
       o.waveMorphTarget = o.waveNorm * 3;
       o.waveMorphCurrent += (o.waveMorphTarget - o.waveMorphCurrent) * glideSmooth;
 
-      // volume (slider +/- drift), clamped
-      let volLevel = o.volNorm + o.volDriftCurrent * this.volDriftDepth * this.VOL_DRIFT_MAX_AMOUNT;
-      if (volLevel < 0) volLevel = 0;
-      if (volLevel > 1) volLevel = 1;
-      o.ampTarget = o.switchOn ? volLevel : 0;
+      this.updateOscVolDrift(o, dt);
+      const volCurved = o.volNorm * o.volNorm;
+      let volLevel = volCurved + o.volDriftCurrent * this.volDriftDepth * this.VOL_DRIFT_MAX;
+      volLevel = Math.max(0, Math.min(1, volLevel));
+      o.ampTarget = (o.volNorm > 0.02) ? volLevel : 0;
+
+      let semis;
+      const chordThis = this.chordModeActive && i !== 0 && this.currentScale !== 0;
+      if (chordThis) {
+        this.updateOscDrift(o, i, dt);
+        semis = this.chordTone(this.oscs[0].storedTune, 2*i, chordNotes);
+        semis += o.driftCurrent * this.driftDepth * this.DRIFT_MAX_SEMITONES;
+        semis = this.quantize(semis, this.currentScale);
+      } else {
+        semis = o.storedTune;
+        if (i !== 0) {
+          this.updateOscDrift(o, i, dt);
+          semis += o.driftCurrent * this.driftDepth * this.DRIFT_MAX_SEMITONES;
+          semis = this.quantize(semis, this.currentScale);
+        }
+      }
+      o.targetSemis = semis;
+      o.currentSemis += (o.targetSemis - o.currentSemis) * glideSmooth;
+      const freq = this.ROOT_FREQ * Math.pow(2, o.currentSemis/12);
+      o.phaseInc = freq / sampleRate;
     }
   }
 
   process(inputs, outputs) {
-    const output = outputs[0];
-    const ch = output[0];
+    const out = outputs[0];
+    const ch = out[0];
     const n = ch.length;
+    this.updateControlRate(n/sampleRate);
 
-    this.updateControlRate(n / sampleRate);
-
-    const ampSmoothPerSample = 1 - Math.exp(-(1 / sampleRate) / this.ampTauSeconds);
-
+    const blend = this.waveBlendModeActive;
     for (let s = 0; s < n; s++) {
       let mix = 0;
       for (let i = 0; i < 4; i++) {
         const o = this.oscs[i];
-        const freqHz = this.ROOT_FREQ * Math.pow(2, o.currentSemis / 12);
-        o.phase += freqHz / sampleRate;
-        if (o.phase >= 1) o.phase -= 1;
-
-        o.ampCurrent += (o.ampTarget - o.ampCurrent) * ampSmoothPerSample;
-        const wave = this.blendedWave(o.waveMorphCurrent, o.phase);
+        o.phase += o.phaseInc; if (o.phase >= 1) o.phase -= 1;
+        o.ampCurrent += (o.ampTarget - o.ampCurrent) * 0.002;
+        const wave = this.blendedWave(o.waveMorphCurrent, o.phase, blend);
         mix += wave * o.ampCurrent;
       }
-      const sample = mix / 4;
-      for (let c = 0; c < output.length; c++) {
-        output[c][s] = sample;
-      }
+      const sample = mix/4;
+      for (let c = 0; c < out.length; c++) out[c][s] = sample;
     }
     return true;
   }
@@ -466,196 +401,175 @@ registerProcessor('drone-processor', DroneProcessor);
 `;
 
 // =====================================================================
-// Main thread: audio setup + UI
+// Main thread
 // =====================================================================
 
-let audioCtx = null;
-let workletNode = null;
+let audioCtx = null, workletNode = null, filterNode = null;
+let selectedOsc = 0;
 let scaleIndex = 0;
+let chordActive = false, chaosActive = false, waveBlend = true;
+let autoClockOn = false, autoClockBPM = 120, autoClockTimer = null;
 
-const oscState = [0,1,2,3].map(() => ({ tune: 0.5, wave: 0, vol: 0.7, on: true }));
-const globalState = { driftDepth: 0, driftSpeed: 0, volDriftDepth: 0, volDriftSpeed: 0, glideSeconds: 0.05 };
+const oscState = [0,1,2,3].map(() => ({ wave:0, vol:0.7, tune:0 }));
+const globalState = { driftDepth:0, driftSpeed:0, volDriftDepth:0, volDriftSpeed:0, glideSeconds:0.05 };
 
-function sendOsc(index) {
-  if (!workletNode) return;
-  workletNode.port.postMessage({ type: 'osc', index, ...oscState[index] === undefined ? {} : { tune: oscState[index].tune, wave: oscState[index].wave, vol: oscState[index].vol, on: oscState[index].on } });
-}
+function sendOsc(i){ if(workletNode) workletNode.port.postMessage({type:'osc', index:i, wave:oscState[i].wave, vol:oscState[i].vol}); }
+function sendGlobal(){ if(workletNode) workletNode.port.postMessage({type:'global', ...globalState, currentScale:scaleIndex, chordModeActive:chordActive, waveBlendModeActive:waveBlend}); }
+function sendTune(i){ if(workletNode) workletNode.port.postMessage({type:'setTune', index:i, value:oscState[i].tune}); }
+function sendTrigger(){ if(workletNode) workletNode.port.postMessage({type:'trigger'}); }
 
-function sendGlobal() {
-  if (!workletNode) return;
-  workletNode.port.postMessage({ type: 'global', ...globalState, scaleIndex });
-}
-
-// ---- knob widget (vertical drag) ----
 function createKnob(label, min, max, initial, onChange, format) {
-  const wrap = document.createElement('div');
-  wrap.className = 'knob-wrap';
-
-  const knob = document.createElement('div');
-  knob.className = 'knob';
-
-  const labelEl = document.createElement('div');
-  labelEl.className = 'knob-label';
-  labelEl.textContent = label;
-
-  const valEl = document.createElement('div');
-  valEl.className = 'knob-val';
-
+  const wrap = document.createElement('div'); wrap.className='knob-wrap';
+  const knob = document.createElement('div'); knob.className='knob';
+  const labelEl = document.createElement('div'); labelEl.className='knob-label'; labelEl.textContent=label;
+  const valEl = document.createElement('div'); valEl.className='knob-val';
   let value = initial;
+  function render(){ const norm=(value-min)/(max-min); knob.style.setProperty('--angle',(-135+norm*270)+'deg'); valEl.textContent=format?format(value):value.toFixed(2); }
+  function setValue(v){ value=Math.min(max,Math.max(min,v)); render(); onChange(value); }
+  let dragging=false, startY=0, startVal=0;
+  knob.addEventListener('pointerdown', e=>{dragging=true; startY=e.clientY; startVal=value; knob.setPointerCapture(e.pointerId);});
+  knob.addEventListener('pointermove', e=>{ if(!dragging) return; const dy=startY-e.clientY; setValue(startVal+(dy/150)*(max-min)); });
+  knob.addEventListener('pointerup', ()=>dragging=false);
+  knob.addEventListener('pointercancel', ()=>dragging=false);
+  render(); wrap.append(knob,labelEl,valEl);
+  return { el: wrap, setValue, getValue:()=>value };
+}
 
-  function render() {
-    const norm = (value - min) / (max - min);
-    const angle = -135 + norm * 270;
-    knob.style.setProperty('--angle', angle + 'deg');
-    valEl.textContent = format ? format(value) : value.toFixed(2);
-  }
-
-  function setValue(v) {
-    value = Math.min(max, Math.max(min, v));
-    render();
-    onChange(value);
-  }
-
-  let dragging = false;
-  let startY = 0;
-  let startVal = 0;
-
-  knob.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    startY = e.clientY;
-    startVal = value;
-    knob.setPointerCapture(e.pointerId);
-  });
-  knob.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    const dy = startY - e.clientY;
-    const range = max - min;
-    setValue(startVal + (dy / 150) * range);
-  });
-  knob.addEventListener('pointerup', () => { dragging = false; });
-  knob.addEventListener('pointercancel', () => { dragging = false; });
-
-  render();
-  wrap.appendChild(knob);
-  wrap.appendChild(labelEl);
-  wrap.appendChild(valEl);
-  return { el: wrap, setValue, getValue: () => value };
+function createSwitch(label, initial, onChange) {
+  const wrap = document.createElement('div'); wrap.className='knob-wrap';
+  const sw = document.createElement('div'); sw.className='switch'+(initial?' on':'');
+  const labelEl = document.createElement('div'); labelEl.className='knob-label'; labelEl.textContent=label;
+  let on = initial;
+  sw.addEventListener('click', ()=>{ on=!on; sw.classList.toggle('on',on); onChange(on); });
+  wrap.append(sw,labelEl);
+  return { el: wrap, get:()=>on, set:(v)=>{on=v; sw.classList.toggle('on',on);} };
 }
 
 function buildUI() {
   const grid = document.getElementById('grid');
 
   for (let i = 0; i < 4; i++) {
-    const col = document.createElement('div');
-    col.className = 'osc-col';
+    const col = document.createElement('div'); col.className='col';
+    const hdr = document.createElement('div'); hdr.className='col-label'; hdr.textContent='osc '+(i+1);
+    col.appendChild(hdr);
 
-    const colLabel = document.createElement('div');
-    colLabel.className = 'col-label';
-    colLabel.textContent = 'osc ' + (i + 1);
-    col.appendChild(colLabel);
+    const led = document.createElement('div'); led.className='led'+(i===0?' on':'');
+    led.style.marginBottom='2px';
+    col.appendChild(led);
+    col._led = led;
 
-    const tuneKnob = createKnob('tune', 0, 1, 0.5, (v) => {
-      oscState[i].tune = v; sendOsc(i);
-    }, (v) => v.toFixed(2));
-    col.appendChild(tuneKnob.el);
-
-    const waveKnob = createKnob('wave', 0, 1, 0, (v) => {
-      oscState[i].wave = v; sendOsc(i);
-    }, (v) => v.toFixed(2));
+    const waveKnob = createKnob('wave',0,1,0,(v)=>{oscState[i].wave=v; sendOsc(i);});
     col.appendChild(waveKnob.el);
 
     const sliderWrap = document.createElement('div');
-    sliderWrap.className = 'vslider-wrap';
+    sliderWrap.style.display='flex'; sliderWrap.style.flexDirection='column'; sliderWrap.style.alignItems='center'; sliderWrap.style.gap='3px';
     const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.className = 'vslider';
-    slider.min = 0; slider.max = 1; slider.step = 0.01; slider.value = 0.7;
-    slider.addEventListener('input', () => {
-      oscState[i].vol = parseFloat(slider.value); sendOsc(i);
-    });
-    const sliderLabel = document.createElement('div');
-    sliderLabel.className = 'knob-label';
-    sliderLabel.textContent = 'vol';
-    sliderWrap.appendChild(slider);
-    sliderWrap.appendChild(sliderLabel);
+    slider.type='range'; slider.className='vslider'; slider.min=0; slider.max=1; slider.step=0.01; slider.value=0.7;
+    slider.addEventListener('input', ()=>{ oscState[i].vol=parseFloat(slider.value); sendOsc(i); });
+    const sLabel = document.createElement('div'); sLabel.className='knob-label'; sLabel.textContent='vol';
+    sliderWrap.append(slider,sLabel);
     col.appendChild(sliderWrap);
-
-    const led = document.createElement('div');
-    led.className = 'led on';
-
-    const sw = document.createElement('div');
-    sw.className = 'switch on';
-    sw.addEventListener('click', () => {
-      oscState[i].on = !oscState[i].on;
-      sw.classList.toggle('on', oscState[i].on);
-      led.classList.toggle('on', oscState[i].on);
-      sendOsc(i);
-    });
-    col.appendChild(sw);
-    col.appendChild(led);
 
     grid.appendChild(col);
   }
+  window._oscCols = Array.from(grid.children);
 
-  // global column
-  const gcol = document.createElement('div');
-  gcol.className = 'global-col';
-  const gLabel = document.createElement('div');
-  gLabel.className = 'col-label';
-  gLabel.textContent = 'global';
+  const gcol = document.createElement('div'); gcol.className='col';
+  const gLabel = document.createElement('div'); gLabel.className='col-label'; gLabel.textContent='global';
   gcol.appendChild(gLabel);
 
-  const driftDepthKnob = createKnob('drift depth', 0, 1, 0, (v) => {
-    globalState.driftDepth = v; sendGlobal();
+  // Encoder equivalent: select + drag-adjust
+  const selBtn = document.createElement('button'); selBtn.className='mini'; selBtn.textContent='SELECT OSC 1';
+  selBtn.addEventListener('click', ()=>{
+    selectedOsc = (selectedOsc+1)%4;
+    selBtn.textContent = 'SELECT OSC '+(selectedOsc+1);
+    window._oscCols.forEach((c,idx)=>c._led.classList.toggle('on', idx===selectedOsc));
   });
-  gcol.appendChild(driftDepthKnob.el);
+  gcol.appendChild(selBtn);
 
-  const driftSpeedKnob = createKnob('drift speed', 0, 1, 0, (v) => {
-    globalState.driftSpeed = v; sendGlobal();
+  const pitchKnob = createKnob('pitch (sel)', -24, 24, 0, (v)=>{
+    oscState[selectedOsc].tune = v; sendTune(selectedOsc);
+  }, v=>v.toFixed(1));
+  gcol.appendChild(pitchKnob.el);
+  // re-render pitch knob to reflect currently selected osc's stored tune when switching
+  selBtn.addEventListener('click', ()=>{ pitchKnob.setValue(oscState[selectedOsc].tune); });
+
+  const saveBtn = document.createElement('button'); saveBtn.className='mini'; saveBtn.textContent='SAVE (session)';
+  saveBtn.title = 'In-memory only in this preview — use localStorage yourself once hosted for real persistence';
+  gcol.appendChild(saveBtn);
+
+  const driftDepthKnob = createKnob('drift depth',0,1,0,(v)=>{globalState.driftDepth=v; sendGlobal();});
+  const driftSpeedKnob = createKnob('drift speed',0,1,0,(v)=>{globalState.driftSpeed=v; sendGlobal();});
+  const volDriftDepthKnob = createKnob('vol drift depth',0,1,0,(v)=>{globalState.volDriftDepth=v; sendGlobal();});
+  const volDriftSpeedKnob = createKnob('vol drift speed',0,1,0,(v)=>{globalState.volDriftSpeed=v; sendGlobal();});
+  const glideKnob = createKnob('glide (s)',0.005,1,0.05,(v)=>{globalState.glideSeconds=v; sendGlobal();}, v=>v.toFixed(2));
+  [driftDepthKnob,driftSpeedKnob,volDriftDepthKnob,volDriftSpeedKnob,glideKnob].forEach(k=>gcol.appendChild(k.el));
+
+  const modeLabel = document.createElement('div'); modeLabel.className='sec-label'; modeLabel.textContent='modes';
+  gcol.appendChild(modeLabel);
+
+  const chordSw = createSwitch('chord', false, (v)=>{ chordActive=v; sendGlobal(); });
+  const waveSw = createSwitch('blend', true, (v)=>{ waveBlend=v; sendGlobal(); });
+  const chaosSw = createSwitch('chaos', false, (v)=>{
+    chaosActive=v;
+    if (workletNode) workletNode.port.postMessage({type: v?'chaosActivate':'chaosDeactivate'});
   });
-  gcol.appendChild(driftSpeedKnob.el);
+  [chordSw, waveSw, chaosSw].forEach(s=>gcol.appendChild(s.el));
 
-  const volDriftDepthKnob = createKnob('vol drift depth', 0, 1, 0, (v) => {
-    globalState.volDriftDepth = v; sendGlobal();
-  });
-  gcol.appendChild(volDriftDepthKnob.el);
-
-  const volDriftSpeedKnob = createKnob('vol drift speed', 0, 1, 0, (v) => {
-    globalState.volDriftSpeed = v; sendGlobal();
-  });
-  gcol.appendChild(volDriftSpeedKnob.el);
-
-  const glideKnob = createKnob('glide (s)', 0.005, 1, 0.05, (v) => {
-    globalState.glideSeconds = v; sendGlobal();
-  }, (v) => v.toFixed(2));
-  gcol.appendChild(glideKnob.el);
-
-  const scaleRow = document.createElement('div');
-  scaleRow.className = 'scale-row';
+  const qLabel = document.createElement('div'); qLabel.className='sec-label'; qLabel.textContent='quantizer';
+  gcol.appendChild(qLabel);
+  const scaleRow = document.createElement('div'); scaleRow.className='led-row';
   const scaleLeds = [];
-  for (let s = 0; s < 4; s++) {
-    const led = document.createElement('div');
-    led.className = 'led';
-    scaleLeds.push(led);
-    scaleRow.appendChild(led);
-  }
+  for (let s=0; s<4; s++){ const l=document.createElement('div'); l.className='led'; scaleLeds.push(l); scaleRow.appendChild(l); }
   gcol.appendChild(scaleRow);
-
-  const scaleNameEl = document.createElement('div');
-  scaleNameEl.className = 'knob-val';
-  scaleNameEl.textContent = SCALE_NAMES[0];
+  const scaleNameEl = document.createElement('div'); scaleNameEl.className='knob-val'; scaleNameEl.textContent='off';
   gcol.appendChild(scaleNameEl);
-
-  const punchBtn = document.createElement('button');
-  punchBtn.className = 'punch';
-  punchBtn.textContent = 'punch';
-  punchBtn.addEventListener('click', () => {
-    scaleIndex = (scaleIndex + 1) % 5;
-    scaleLeds.forEach((l, idx) => l.classList.toggle('on', scaleIndex !== 0 && idx === scaleIndex - 1));
-    scaleNameEl.textContent = SCALE_NAMES[scaleIndex];
+  const punchBtn = document.createElement('button'); punchBtn.className='mini'; punchBtn.textContent='punch';
+  punchBtn.addEventListener('click', ()=>{
+    scaleIndex=(scaleIndex+1)%5;
+    scaleLeds.forEach((l,idx)=>l.classList.toggle('on', scaleIndex!==0 && idx===scaleIndex-1));
+    scaleNameEl.textContent=SCALE_NAMES[scaleIndex];
     sendGlobal();
   });
   gcol.appendChild(punchBtn);
+
+  const fLabel = document.createElement('div'); fLabel.className='sec-label'; fLabel.textContent='filter';
+  gcol.appendChild(fLabel);
+  const xy = document.createElement('div'); xy.className='xypad';
+  const dot = document.createElement('div'); dot.className='xy-dot'; dot.style.left='50%'; dot.style.top='50%';
+  xy.appendChild(dot);
+  function setXY(nx, ny) {
+    dot.style.left=(nx*100)+'%'; dot.style.top=((1-ny)*100)+'%';
+    if (filterNode && audioCtx) {
+      const cutoff = 100 * Math.pow(40, nx);
+      filterNode.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.01);
+      filterNode.Q.setTargetAtTime(0.7 + ny*(8-0.7), audioCtx.currentTime, 0.01);
+    }
+  }
+  let xyDragging=false;
+  function xyFromEvent(e){ const r=xy.getBoundingClientRect(); const nx=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); const ny=Math.min(1,Math.max(0,1-(e.clientY-r.top)/r.height)); setXY(nx,ny); }
+  xy.addEventListener('pointerdown', e=>{xyDragging=true; xy.setPointerCapture(e.pointerId); xyFromEvent(e);});
+  xy.addEventListener('pointermove', e=>{ if(xyDragging) xyFromEvent(e); });
+  xy.addEventListener('pointerup', ()=>xyDragging=false);
+  gcol.appendChild(xy);
+  setXY(0.5, 0.3);
+
+  const tLabel = document.createElement('div'); tLabel.className='sec-label'; tLabel.textContent='clock trigger';
+  gcol.appendChild(tLabel);
+  const trigBtn = document.createElement('button'); trigBtn.className='mini'; trigBtn.textContent='TRIG';
+  trigBtn.addEventListener('click', sendTrigger);
+  gcol.appendChild(trigBtn);
+  const clockSw = createSwitch('auto clock', false, (v)=>{
+    autoClockOn = v;
+    if (autoClockTimer) { clearInterval(autoClockTimer); autoClockTimer=null; }
+    if (v) { const ms = 60000/autoClockBPM; autoClockTimer = setInterval(sendTrigger, ms); }
+  });
+  gcol.appendChild(clockSw.el);
+  const bpmKnob = createKnob('bpm',40,240,120,(v)=>{
+    autoClockBPM = v;
+    if (autoClockTimer) { clearInterval(autoClockTimer); autoClockTimer = setInterval(sendTrigger, 60000/autoClockBPM); }
+  }, v=>Math.round(v));
+  gcol.appendChild(bpmKnob.el);
 
   grid.appendChild(gcol);
 }
@@ -663,28 +577,29 @@ function buildUI() {
 async function startAudio() {
   const startBtn = document.getElementById('startBtn');
   const status = document.getElementById('status');
-  startBtn.disabled = true;
-  status.textContent = 'starting...';
+  startBtn.disabled = true; status.textContent = 'starting...';
 
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const blob = new Blob([PROCESSOR_SRC], { type: 'application/javascript' });
+  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  const blob = new Blob([PROCESSOR_SRC], {type:'application/javascript'});
   const url = URL.createObjectURL(blob);
   await audioCtx.audioWorklet.addModule(url);
 
-  workletNode = new AudioWorkletNode(audioCtx, 'drone-processor', { outputChannelCount: [2] });
-  workletNode.connect(audioCtx.destination);
+  workletNode = new AudioWorkletNode(audioCtx, 'drone-processor', {outputChannelCount:[2]});
+  filterNode = audioCtx.createBiquadFilter();
+  filterNode.type = 'lowpass';
+  filterNode.frequency.value = 100 * Math.pow(40, 0.5);
+  filterNode.Q.value = 0.7 + 0.3*(8-0.7);
 
-  // push current UI state to the processor now that it exists
-  for (let i = 0; i < 4; i++) sendOsc(i);
+  workletNode.connect(filterNode);
+  filterNode.connect(audioCtx.destination);
+
+  for (let i=0;i<4;i++){ sendOsc(i); sendTune(i); }
   sendGlobal();
 
-  status.textContent = 'running — sample rate ' + audioCtx.sampleRate + 'Hz';
+  status.textContent = 'running — ' + audioCtx.sampleRate + 'Hz';
 }
 
-document.getElementById('startBtn').addEventListener('click', () => {
-  startAudio();
-});
-
+document.getElementById('startBtn').addEventListener('click', startAudio);
 buildUI();
 </script>
 </body>
