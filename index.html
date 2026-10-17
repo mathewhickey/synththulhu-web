@@ -322,7 +322,8 @@ class DroneProcessor extends AudioWorkletProcessor {
 
       this.updateOscVolDrift(o, dt);
       const volLevelBase = o.volNorm * o.volNorm; // quadratic taper
-      let volLevel = volLevelBase + o.volDriftCurrent * this.volDriftDepth * this.VOL_DRIFT_MAX;
+      const volDriftAmt = (free4 && i === 3) ? 0 : o.volDriftCurrent * this.volDriftDepth * this.VOL_DRIFT_MAX;
+      let volLevel = volLevelBase + volDriftAmt;
       volLevel = Math.max(0, Math.min(1, volLevel));
       o.ampTarget = (o.volNorm > this.VOL_OFF_THRESHOLD) ? volLevel : 0;
 
