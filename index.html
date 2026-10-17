@@ -213,7 +213,7 @@ class DroneProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (e) => this.handleMessage(e.data);
   }
 
-  get osc4Free() { return this.osc4FreeSwitch && this.chordModeActive && this.currentScale !== 0; }
+  get osc4Free() { return this.osc4FreeSwitch; }
 
   handleMessage(m) {
     if (m.type === 'osc') {
@@ -392,7 +392,7 @@ let autoClockTimer = null, autoClockBPM = 120;
 const oscState = [0,1,2,3].map(() => ({ wave: 0, vol: 0.7, tune: 0 }));
 const knobNorm = { driftDepth:0, driftSpeed:0, volDriftDepth:0, volDriftSpeed:0, glide:0, detune:0 };
 
-const osc4Free = () => osc4FreeSw && chordActive && scaleIndex !== 0;
+const osc4Free = () => osc4FreeSw;
 
 function post(m){ if (workletNode) workletNode.port.postMessage(m); }
 function sendOsc(i){ post({type:'osc', index:i, wave:oscState[i].wave, vol:oscState[i].vol}); }
@@ -436,12 +436,11 @@ function stepTune(steps) {
 
 // ---------- selection rules (mirror updateEncoderAndSelection) ----------
 function enforceSelection() {
-  if (osc4Free()) { if (selectedOsc !== 3) selectedOsc = 0; }
-  else if (chordActive) selectedOsc = 0;
+  if (chordActive && !(osc4Free() && selectedOsc === 3)) selectedOsc = 0;
 }
 function shortPress() {
-  if (osc4Free()) selectedOsc = (selectedOsc === 0) ? 3 : 0;
-  else if (!chordActive) selectedOsc = (selectedOsc + 1) % 4;
+  if (chordActive) { if (osc4Free()) selectedOsc = (selectedOsc === 0) ? 3 : 0; }
+  else selectedOsc = (selectedOsc + 1) % 4;
   enforceSelection(); renderSelection();
 }
 
@@ -624,7 +623,7 @@ function buildPanel() {
   makeToggle(55.6, 79.4, false, v => { chordActive = v; enforceSelection(); renderSelection(); sendGlobal(); readout('chord mode '+(v?'on':'off')+(v && scaleIndex===0 ? ' (pick a scale)' : '')); });
   label('Free osc4', 64.8, 85.4);
   makeToggle(64.8, 79.4, false, v => { osc4FreeSw = v; enforceSelection(); renderSelection(); sendGlobal();
-      readout('free osc4 '+(v?'on':'off')+(v && !(chordActive && scaleIndex) ? ' — needs chord mode on + a scale' : '')); });
+      readout('free osc4 '+(v?'on — no drift on osc 4':'off')); });
   label('Blend', 73.9, 74.7);
   makeToggle(73.9, 79.4, true, v => { waveBlend = v; sendGlobal(); readout('wave '+(v?'blend':'discrete')); });
 
