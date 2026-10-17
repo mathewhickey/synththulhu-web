@@ -3,205 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Synththulhu v2 — Web</title>
+<title>Bagpipes — Synththulhu Web</title>
 <style>
   :root {
-    --bg: #07100e; --panel: #0f1c19; --panel-edge: #1c332d;
-    --teal: #4fe3c9; --teal-dim: #2a5f55; --red: #ff5252;
-    --text: #e7f3ef; --text-dim: #7f9c95; --mono: 'JetBrains Mono','Courier New',monospace;
+    --wood-a: #dfb27a; --wood-b: #d19f63; --wood-c: #c98f52;
+    --label-bg: #141414; --label-fg: #f4f4f0;
+    --blue: #3a9de2; --blue-hi: #7cc4f5; --blue-lo: #1e6fae;
+    --led-off: #4a0d12; --led-on: #ff2a2a;
+    --bench: #17130f; --ui: #e8dfd0; --ui-dim: #9b8f7d;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
   body {
-    margin: 0; min-height: 100vh;
-    background: radial-gradient(ellipse at 50% 20%, #0d1c19 0%, var(--bg) 60%);
-    color: var(--text); font-family: var(--mono);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: radial-gradient(ellipse at 50% 30%, #2a2219 0%, var(--bench) 70%);
+    color: var(--ui); font-family: 'Helvetica Neue', Arial, sans-serif;
+    display: flex; align-items: center; justify-content: center; padding: 8px;
   }
-  .breathe {
-    position: fixed; inset: 0; pointer-events: none;
-    background: radial-gradient(circle at 50% 40%, rgba(79,227,201,0.10) 0%, rgba(79,227,201,0) 60%);
-    animation: breathe 8s ease-in-out infinite;
-  }
-  @keyframes breathe { 0%,100%{opacity:.4;transform:scale(1);} 50%{opacity:.9;transform:scale(1.08);} }
-  @media (prefers-reduced-motion: reduce) { .breathe { animation: none; } }
+  .stage { width: min(calc(100vw - 16px), calc((100dvh - 64px) * 2.3085)); }
 
+  /* ---------- the plywood panel ---------- */
   .panel {
-    position: relative; background: var(--panel); border: 1px solid var(--panel-edge);
-    border-radius: 10px; padding: 24px 20px;
-    box-shadow: 0 0 60px rgba(0,0,0,.5), inset 0 0 40px rgba(79,227,201,.03);
-    max-width: 1180px; width: 100%;
+    position: relative; width: 100%; aspect-ratio: 1858 / 805; container-type: inline-size;
+    border-radius: 0.6cqw; overflow: hidden; user-select: none; -webkit-user-select: none;
+    background:
+      repeating-linear-gradient(92deg, rgba(120,70,20,.10) 0 .12cqw, rgba(255,230,190,.05) .12cqw .5cqw, rgba(120,70,20,.07) .5cqw .62cqw, rgba(0,0,0,0) .62cqw 1.4cqw),
+      radial-gradient(ellipse at 30% 40%, rgba(255,235,200,.35), rgba(0,0,0,0) 55%),
+      radial-gradient(ellipse at 85% 85%, rgba(120,60,10,.25), rgba(0,0,0,0) 50%),
+      linear-gradient(180deg, var(--wood-a), var(--wood-b) 60%, var(--wood-c));
+    box-shadow: 0 1.2cqw 3cqw rgba(0,0,0,.6), inset 0 0 0 .12cqw rgba(60,30,5,.5);
   }
-  h1 { font-size: 13px; letter-spacing:.25em; text-transform:uppercase; color:var(--teal); margin:0 0 3px; font-weight:600; }
-  .subtitle { font-size: 11px; color: var(--text-dim); margin: 0 0 18px; letter-spacing:.04em; }
+  .abs { position: absolute; transform: translate(-50%, -50%); }
 
-  .grid { display: grid; grid-template-columns: repeat(4, 1fr) 1.5fr; gap: 14px; }
-  .col {
-    background: rgba(0,0,0,.2); border: 1px solid var(--panel-edge); border-radius: 8px;
-    padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  }
-  .col-label { font-size: 10px; letter-spacing:.14em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 2px; }
-  .sec-label { font-size: 9px; letter-spacing:.1em; color: var(--teal-dim); text-transform: uppercase; margin-top: 8px; }
+  .hole { position: absolute; background: #1b1109; border-radius: 1cqw; transform: translate(-50%,-50%); box-shadow: inset 0 .15cqw .3cqw rgba(0,0,0,.8); }
+  .hole.slot { width: 1.7cqw; height: .8cqw; }
+  .hole.dot  { width: .6cqw; height: .6cqw; border-radius: 50%; }
 
-  .knob-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; user-select: none; }
-  .knob {
-    width: 46px; height: 46px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #1c332d, #0a1512 70%);
-    border: 1px solid var(--panel-edge); position: relative; cursor: ns-resize; touch-action: none;
+  /* label-maker strips */
+  .lbl {
+    position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+    background: var(--label-bg); color: var(--label-fg);
+    font: 700 1.45cqw/1 'Arial Narrow','Helvetica Neue',Arial,sans-serif; letter-spacing: .07em;
+    padding: .38cqw .8cqw; border-radius: .12cqw; text-transform: uppercase;
+    box-shadow: 0 .1cqw .25cqw rgba(0,0,0,.45); pointer-events: none;
   }
-  .knob::after {
-    content:''; position:absolute; top:4px; left:50%; width:2px; height:16px; background:var(--teal);
-    transform-origin: 50% 19px; transform: translateX(-50%) rotate(var(--angle,0deg));
-    border-radius:1px; box-shadow:0 0 6px var(--teal);
-  }
-  .knob-label { font-size: 8.5px; color: var(--text-dim); letter-spacing:.08em; text-transform: uppercase; }
-  .knob-val { font-size: 8.5px; color: var(--teal-dim); }
+  .lbl.title { font-size: 1.75cqw; padding: .5cqw 1.6cqw; letter-spacing: .12em; }
+  .lbl.small { font-size: 1.15cqw; padding: .3cqw .6cqw; }
+  .lbl.lc { text-transform: none; padding: .3cqw .45cqw; font-size: 1.3cqw; }
 
-  input[type="range"].vslider {
-    writing-mode: vertical-lr; direction: rtl; width: 18px; height: 76px;
-    accent-color: var(--teal); background: transparent;
+  /* knobs */
+  .knob { width: 5.4cqw; height: 5.4cqw; cursor: ns-resize; touch-action: none; }
+  .knob .base {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: repeating-conic-gradient(#0c0c0c 0 4deg, #232323 4deg 8deg);
+    box-shadow: 0 .45cqw .8cqw rgba(0,0,0,.55), 0 0 0 .1cqw #000;
   }
+  .knob .cap {
+    position: absolute; inset: 13%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, var(--blue-hi), var(--blue) 45%, var(--blue-lo) 100%);
+    transform: rotate(var(--angle, 0deg)); box-shadow: inset 0 -.2cqw .4cqw rgba(0,0,0,.35);
+  }
+  .knob .cap::before {   /* pointer tab */
+    content: ''; position: absolute; left: 50%; top: -4%; width: 26%; height: 46%;
+    transform: translateX(-50%); border-radius: 40% 40% 20% 20%;
+    background: linear-gradient(180deg, var(--blue-hi), var(--blue)); box-shadow: 0 0 .25cqw rgba(0,0,0,.4);
+  }
+  .knob.small { width: 3.5cqw; height: 3.5cqw; }
+  .knob.focus .base { box-shadow: 0 0 0 .2cqw rgba(255,255,255,.6), 0 .45cqw .8cqw rgba(0,0,0,.55); }
 
-  .switch {
-    width: 36px; height: 18px; border-radius: 9px; background:#1c332d;
-    border: 1px solid var(--panel-edge); position: relative; cursor: pointer;
+  /* big encoder knob */
+  .encoder { width: 10.6cqw; height: 10.6cqw; cursor: grab; touch-action: none; }
+  .encoder .base {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: repeating-conic-gradient(#080808 0 3deg, #2a2a2a 3deg 6deg);
+    box-shadow: 0 .8cqw 1.6cqw rgba(0,0,0,.6), 0 0 0 .12cqw #000;
   }
-  .switch.on { background: var(--teal-dim); }
-  .switch::after {
-    content:''; position:absolute; top:2px; left:2px; width:12px; height:12px;
-    border-radius:50%; background:var(--text-dim); transition:left .15s,background .15s;
+  .encoder .top {
+    position: absolute; inset: 14%; border-radius: 50%;
+    background: conic-gradient(from var(--spin, 0deg), #f2f2f2, #8b8b8b, #e9e9e9, #7d7d7d, #f2f2f2);
+    box-shadow: inset 0 0 .5cqw rgba(0,0,0,.5), 0 0 0 .3cqw #151515;
   }
-  .switch.on::after { left:20px; background:var(--teal); box-shadow:0 0 8px var(--teal); }
+  .encoder.down .base { transform: scale(.985); }
 
-  .led { width:8px; height:8px; border-radius:50%; background:#3a1414; box-shadow: inset 0 0 3px rgba(0,0,0,.6); }
-  .led.on { background: var(--red); box-shadow: 0 0 8px var(--red), 0 0 2px var(--red); }
-  .led-row { display: flex; gap: 5px; }
+  /* LEDs */
+  .led { width: 1.45cqw; height: 1.45cqw; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #7a1f25, var(--led-off) 70%);
+         box-shadow: 0 0 0 .22cqw #1b1109, inset 0 0 .3cqw rgba(0,0,0,.6); }
+  .led.on { background: radial-gradient(circle at 35% 30%, #ffb0a8, var(--led-on) 55%, #b00 100%);
+            box-shadow: 0 0 0 .22cqw #1b1109, 0 0 1.4cqw .35cqw rgba(255,40,40,.75); }
 
-  button.mini {
-    background: var(--panel-edge); color: var(--text); border: 1px solid var(--teal-dim);
-    border-radius: 14px; padding: 5px 12px; font-family: var(--mono); font-size: 9px;
-    letter-spacing:.08em; text-transform: uppercase; cursor: pointer;
-  }
-  button.mini:hover { border-color: var(--teal); color: var(--teal); }
-  button.mini:active { transform: scale(.96); }
+  /* volume faders */
+  .fader { width: 2.6cqw; height: 10.4cqw; touch-action: none; cursor: ns-resize; }
+  .fader .slot { position: absolute; left: 50%; top: 0; bottom: 0; width: .9cqw; transform: translateX(-50%);
+                 background: #120c07; border-radius: .5cqw; box-shadow: inset 0 .1cqw .3cqw #000; }
+  .fader .cap { position: absolute; left: 50%; width: 2.5cqw; height: 1.7cqw; transform: translate(-50%, 50%);
+                background: linear-gradient(180deg,#303030,#0e0e0e); border-radius: .2cqw; box-shadow: 0 .2cqw .4cqw rgba(0,0,0,.6); }
+  .fader .cap::after { content:''; position:absolute; left:8%; right:8%; top:50%; height:.32cqw; transform: translateY(-50%); background:#f2f2f2; }
 
-  .xypad {
-    width: 130px; height: 130px; border-radius: 8px; background: rgba(0,0,0,.25);
-    border: 1px solid var(--panel-edge); position: relative; cursor: crosshair; touch-action: none;
-  }
-  .xypad::before, .xypad::after {
-    content:''; position:absolute; background: var(--panel-edge);
-  }
-  .xypad::before { left:0; right:0; top:50%; height:1px; }
-  .xypad::after { top:0; bottom:0; left:50%; width:1px; }
-  .xy-dot {
-    position:absolute; width:10px; height:10px; border-radius:50%; background:var(--teal);
-    box-shadow:0 0 8px var(--teal); transform:translate(-50%,-50%); pointer-events:none;
-  }
+  /* toggle switches */
+  .tog { width: 4.8cqw; height: 2.3cqw; cursor: pointer; touch-action: manipulation; }
+  .tog .body { position: absolute; inset: 0; background: linear-gradient(180deg,#3d3631,#27221e); border-radius: .25cqw; box-shadow: 0 .15cqw .35cqw rgba(0,0,0,.55); }
+  .tog .body::before, .tog .body::after { content:''; position:absolute; top:50%; width:.45cqw; height:.45cqw; transform:translateY(-50%); border-radius:50%; background:#111; }
+  .tog .body::before { left:.35cqw; } .tog .body::after { right:.35cqw; }
+  .tog .lever { position:absolute; top:14%; bottom:14%; left: 22%; width: 26%; background: linear-gradient(180deg,#8a8a8a,#2a2a2a); border-radius:.15cqw; box-shadow: 0 .1cqw .25cqw rgba(0,0,0,.7); transition: left .12s; }
+  .tog.on .lever { left: 52%; }
+  .tog.on .body { background: linear-gradient(180deg,#3d4a42,#252f29); }
 
-  .transport { margin-top: 18px; display:flex; align-items:center; gap:12px; flex-wrap: wrap; }
-  button.start {
-    background: var(--teal); color:#06110e; border:none; border-radius:6px; padding:9px 20px;
-    font-family: var(--mono); font-weight:700; font-size:11px; letter-spacing:.1em;
-    text-transform: uppercase; cursor:pointer;
-  }
-  button.start:disabled { opacity:.4; cursor:default; }
-  .status { font-size: 10px; color: var(--text-dim); }
+  /* punch button */
+  .punch { width: 3.3cqw; height: 3.3cqw; border-radius: 50%; cursor: pointer; touch-action: manipulation;
+           background: radial-gradient(circle at 38% 30%, #7be07a, #2da24a 60%, #17702d);
+           box-shadow: 0 0 0 .45cqw #b6b6b6, 0 0 0 .6cqw #555, 0 .4cqw .8cqw rgba(0,0,0,.5); }
+  .punch:active { transform: translate(-50%,-50%) scale(.93); }
 
-  @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  /* jacks */
+  .jack { width: 2.9cqw; height: 2.9cqw; border-radius: 50%; cursor: pointer; touch-action: manipulation;
+          background: radial-gradient(circle, #050505 0 28%, #bdbdbd 30% 52%, #6e6e6e 54% 66%, #cfcfcf 68% 100%);
+          box-shadow: 0 .25cqw .5cqw rgba(0,0,0,.5); }
+  .jack.live { box-shadow: 0 0 0 .22cqw rgba(60,255,160,.9), 0 0 1.2cqw rgba(60,255,160,.7); }
+  .jack.flash { box-shadow: 0 0 0 .22cqw rgba(255,255,255,.95), 0 0 1.4cqw rgba(255,255,255,.9); }
+
+  /* joystick */
+  .joy { width: 15.2cqw; height: 15.2cqw; border-radius: 50%;
+         background: radial-gradient(circle at 40% 30%, #3a3a3a, #121212 70%); box-shadow: 0 .6cqw 1.3cqw rgba(0,0,0,.6), inset 0 0 0 .35cqw #0b0b0b; }
+  .joy .pad { position:absolute; left: 50%; top: 50%; width: 11cqw; height: 8.6cqw; transform: translate(-50%,-50%);
+              background: linear-gradient(180deg,#d8d8d2,#9d9d95); border-radius: .5cqw; cursor: crosshair; touch-action: none;
+              box-shadow: inset 0 0 .7cqw rgba(0,0,0,.6); overflow: hidden; }
+  .joy .pad::before, .joy .pad::after { content:''; position:absolute; background: rgba(0,0,0,.18); }
+  .joy .pad::before { left:0; right:0; top:50%; height:.12cqw; } .joy .pad::after { top:0; bottom:0; left:50%; width:.12cqw; }
+  .joy .ball { position:absolute; width: 2.5cqw; height: 2.5cqw; border-radius:50%; transform: translate(-50%,-50%); pointer-events:none;
+               background: radial-gradient(circle at 35% 30%, #5a5a5a, #0e0e0e 75%); box-shadow: 0 .3cqw .5cqw rgba(0,0,0,.6); }
+
+  .readout { position:absolute; left:6.9cqw; transform: translateX(-50%); }
+
+  /* ---------- control bar under the panel ---------- */
+  .bar { display:flex; align-items:center; gap: 12px; margin-top: 10px; flex-wrap: wrap; font-size: 12px; color: var(--ui-dim); }
+  button.start { background: #e8dfd0; color:#1b1309; border: none; border-radius: 6px; padding: 8px 18px; font-weight: 700; font-size: 12px;
+                 letter-spacing:.1em; text-transform: uppercase; cursor: pointer; }
+  button.start:disabled { opacity:.45; cursor: default; }
+  .bar .value { color: var(--ui); font-variant-numeric: tabular-nums; }
+  .bar .hint { margin-left: auto; opacity: .75; }
+  .rotate-note { display:none; font-size:12px; color: var(--ui-dim); margin: 6px 0 0; text-align:center; }
+  @media (orientation: portrait) { .rotate-note { display:block; } }
+  @media (prefers-reduced-motion: reduce) { .tog .lever { transition: none; } }
 </style>
 </head>
 <body>
-<div class="breathe"></div>
-
-<div class="panel">
-  <h1>Synththulhu v2</h1>
-  <p class="subtitle">web port — 4 oscillators, drift, quantizer, chord/chaos, filter, clock trigger</p>
-
-  <div class="grid" id="grid"></div>
-
-  <div class="transport">
-    <button class="start" id="startBtn">Start Audio</button>
-    <span class="status" id="status">audio stopped</span>
+<div class="stage">
+  <div class="panel" id="panel"></div>
+  <div class="bar">
+    <button class="start" id="startBtn">Start audio</button>
+    <span id="status">audio stopped</span>
+    <span class="value" id="readout"></span>
+    <span class="hint">drag knobs up/down · encoder: drag to turn, tap to select, hold 1.5 s to save</span>
   </div>
+  <p class="rotate-note">Best viewed in landscape — turn your phone sideways.</p>
 </div>
 
 <script>
 const SCALE_NAMES = ['off','major','minor','pentatonic','whole tone'];
+const SCALE_MASKS = [
+  null,
+  [1,0,1,0,1,1,0,1,0,1,0,1],
+  [1,0,1,1,0,1,0,1,1,0,1,0],
+  [1,0,1,0,1,0,0,1,0,1,0,0],
+  [1,0,1,0,1,0,1,0,1,0,1,0],
+];
 
 // =====================================================================
-// AudioWorklet processor — ported from the current Teensy firmware
+// AudioWorklet processor — ported from firmware synththulhu_v2_10 (osc4-free build)
 // =====================================================================
 const PROCESSOR_SRC = `
 class DroneProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.ROOT_FREQ = 261.6256;
-    this.TUNE_MIN = -24, this.TUNE_MAX = 24;
-
     this.DRIFT_MAX_SEMITONES = 2.0;
     this.DRIFT_TAU_SLOW = 2.0; this.DRIFT_TAU_FAST = 0.02;
     this.DRIFT_INT_SLOW = [4.0, 9.0]; this.DRIFT_INT_FAST = [0.2, 0.6];
-
     this.VOL_DRIFT_MAX = 1.0;
     this.VOL_DRIFT_TAU_SLOW = 2.0; this.VOL_DRIFT_TAU_FAST = 0.01;
     this.VOL_DRIFT_INT_SLOW = [4.0, 9.0]; this.VOL_DRIFT_INT_FAST = [0.1, 0.3];
-
-    this.TRIGGER_DRIFT_TAU = 0.30;
-    this.TRIGGER_DRIFT_DONE = 0.01;
-
-    this.GLIDE_TAU_MIN = 0.005; this.GLIDE_TAU_MAX = 1.0;
-
-    this.GAIN_SINE = 0.8165, this.GAIN_TRI = 1.0, this.GAIN_SAW = 1.0, this.GAIN_SQR = 0.5774;
-
-    this.SCALE_MASKS = [
-      null,
+    this.TRIGGER_DRIFT_TAU = 0.30; this.TRIGGER_DRIFT_DONE = 0.01;
+    this.VOL_OFF_THRESHOLD = 0.055;
+    this.DETUNE_MAX_SEMITONES = 0.35;
+    this.DETUNE_DIR = [0, 1, -1, 0.5];
+    this.GAIN_SINE = 0.8165; this.GAIN_TRI = 1.0; this.GAIN_SAW = 1.0; this.GAIN_SQR = 0.5774;
+    this.SCALE_MASKS = [null,
       [1,0,1,0,1,1,0,1,0,1,0,1],
       [1,0,1,1,0,1,0,1,1,0,1,0],
       [1,0,1,0,1,0,0,1,0,1,0,0],
-      [1,0,1,0,1,0,1,0,1,0,1,0],
-    ];
+      [1,0,1,0,1,0,1,0,1,0,1,0]];
 
     this.currentScale = 0;
     this.driftDepth = 0; this.driftSpeed = 0;
     this.volDriftDepth = 0; this.volDriftSpeed = 0;
-    this.glideSeconds = this.GLIDE_TAU_MIN;
-    this.chordModeActive = false;
+    this.glideSeconds = 0.005; this.detune = 0;
+    this.chordModeActive = false; this.osc4FreeSwitch = false;
     this.waveBlendModeActive = true;
-
-    this.chaosModeActive = false;
-    this.chaosSnap = {};
 
     this.oscs = [];
     for (let i = 0; i < 4; i++) {
       this.oscs.push({
-        storedTune: 0, targetSemis: 0, currentSemis: 0,
+        storedTune: 0, targetSemis: 0, currentSemis: 0, phaseInc: 0,
         phase: Math.random(), waveMorphTarget: 0, waveMorphCurrent: 0,
         ampTarget: 0, ampCurrent: 0,
         driftCurrent: 0, driftTarget: 0, nextDriftAt: 0, triggerDriftActive: false,
         volDriftCurrent: 0, volDriftTarget: 0, nextVolDriftAt: 0,
         waveNorm: 0, volNorm: 0.7,
-        chaosTune: 0, chaosWave: 0, chaosVol: 0,
       });
     }
-
     this.port.onmessage = (e) => this.handleMessage(e.data);
   }
 
+  get osc4Free() { return this.osc4FreeSwitch && this.chordModeActive && this.currentScale !== 0; }
+
   handleMessage(m) {
     if (m.type === 'osc') {
-      const o = this.oscs[m.index];
-      if (!o) return;
+      const o = this.oscs[m.index]; if (!o) return;
       if (m.wave !== undefined) o.waveNorm = m.wave;
       if (m.vol !== undefined) o.volNorm = m.vol;
     } else if (m.type === 'global') {
-      if (m.driftDepth !== undefined) this.driftDepth = m.driftDepth;
-      if (m.driftSpeed !== undefined) this.driftSpeed = m.driftSpeed;
-      if (m.volDriftDepth !== undefined) this.volDriftDepth = m.volDriftDepth;
-      if (m.volDriftSpeed !== undefined) this.volDriftSpeed = m.volDriftSpeed;
-      if (m.glideSeconds !== undefined) this.glideSeconds = m.glideSeconds;
-      if (m.currentScale !== undefined) this.currentScale = m.currentScale;
-      if (m.chordModeActive !== undefined) this.chordModeActive = m.chordModeActive;
-      if (m.waveBlendModeActive !== undefined) this.waveBlendModeActive = m.waveBlendModeActive;
+      for (const k of ['driftDepth','driftSpeed','volDriftDepth','volDriftSpeed','glideSeconds','detune',
+                       'currentScale','chordModeActive','osc4FreeSwitch','waveBlendModeActive']) {
+        if (m[k] !== undefined) this[k] = m[k];
+      }
     } else if (m.type === 'setTune') {
       this.oscs[m.index].storedTune = m.value;
     } else if (m.type === 'trigger') {
@@ -214,22 +237,6 @@ class DroneProcessor extends AudioWorkletProcessor {
         const mn = minS + this.driftSpeed*(minF-minS), mx = maxS0 + this.driftSpeed*(maxF-maxS0);
         o.nextDriftAt = now + mn + Math.random()*(mx-mn);
       }
-    } else if (m.type === 'chaosActivate') {
-      this.chaosModeActive = true;
-      const snap = { osc: [] };
-      for (let i = 0; i < 4; i++) {
-        this.oscs[i].chaosTune = this.TUNE_MIN + Math.random()*(this.TUNE_MAX-this.TUNE_MIN);
-        this.oscs[i].chaosWave = Math.random()*3;
-        this.oscs[i].chaosVol = Math.random();
-      }
-      snap.driftDepth = Math.random(); snap.driftSpeed = Math.random();
-      snap.volDriftDepth = Math.random(); snap.volDriftSpeed = Math.random();
-      snap.glideSeconds = this.GLIDE_TAU_MIN + Math.random()*(this.GLIDE_TAU_MAX-this.GLIDE_TAU_MIN);
-      snap.scale = Math.floor(Math.random()*5);
-      snap.chordMode = Math.random() < 0.5;
-      this.chaosSnap = snap;
-    } else if (m.type === 'chaosDeactivate') {
-      this.chaosModeActive = false;
     }
   }
 
@@ -243,21 +250,16 @@ class DroneProcessor extends AudioWorkletProcessor {
     }
     return semis;
   }
-
   scaleNotes(scaleIdx) {
     if (scaleIdx === 0) return [];
-    const mask = this.SCALE_MASKS[scaleIdx];
-    const notes = [];
+    const mask = this.SCALE_MASKS[scaleIdx], notes = [];
     for (let i = 0; i < 12; i++) if (mask[i]) notes.push(i);
     return notes;
   }
-
   chordTone(root, position, notes) {
     if (notes.length === 0) return root;
-    const idx = position % notes.length, oct = Math.floor(position/notes.length);
-    return root + notes[idx] + 12*oct;
+    return root + notes[position % notes.length] + 12*Math.floor(position/notes.length);
   }
-
   speedToTau(speed, slow, fast) { return slow + (fast-slow)*speed; }
 
   waveValue(idx, phase) {
@@ -268,26 +270,21 @@ class DroneProcessor extends AudioWorkletProcessor {
       default: return (phase<0.5?1:-1) * this.GAIN_SQR;
     }
   }
-
   blendedWave(morphPos, phase, blend) {
-    let pos = Math.max(0, Math.min(3, morphPos));
+    const pos = Math.max(0, Math.min(3, morphPos));
     if (!blend) return this.waveValue(Math.round(pos), phase);
-    let lo = Math.floor(pos); if (lo>2) lo=2;
+    let lo = Math.floor(pos); if (lo > 2) lo = 2;
     const frac = pos-lo;
     return this.waveValue(lo,phase)*(1-frac) + this.waveValue(lo+1,phase)*frac;
   }
 
   updateOscDrift(o, i, dt) {
-    const affected = i !== 0;
-    if (!affected) return;
+    if (i === 0) return;
     const now = currentTime;
     let tau = 0;
     if (o.triggerDriftActive) tau = this.TRIGGER_DRIFT_TAU;
     else if (this.driftSpeed > 0) tau = this.speedToTau(this.driftSpeed, this.DRIFT_TAU_SLOW, this.DRIFT_TAU_FAST);
-    if (tau > 0) {
-      const sm = 1 - Math.exp(-dt/tau);
-      o.driftCurrent += (o.driftTarget - o.driftCurrent) * sm;
-    }
+    if (tau > 0) o.driftCurrent += (o.driftTarget - o.driftCurrent) * (1 - Math.exp(-dt/tau));
     if (o.triggerDriftActive && Math.abs(o.driftTarget-o.driftCurrent) <= this.TRIGGER_DRIFT_DONE) {
       o.driftCurrent = o.driftTarget; o.triggerDriftActive = false;
     }
@@ -298,13 +295,11 @@ class DroneProcessor extends AudioWorkletProcessor {
       o.nextDriftAt = now + mn + Math.random()*(mx-mn);
     }
   }
-
   updateOscVolDrift(o, dt) {
     const now = currentTime;
     if (this.volDriftSpeed > 0) {
       const tau = this.speedToTau(this.volDriftSpeed, this.VOL_DRIFT_TAU_SLOW, this.VOL_DRIFT_TAU_FAST);
-      const sm = 1 - Math.exp(-dt/tau);
-      o.volDriftCurrent += (o.volDriftTarget - o.volDriftCurrent) * sm;
+      o.volDriftCurrent += (o.volDriftTarget - o.volDriftCurrent) * (1 - Math.exp(-dt/tau));
     }
     if (now >= o.nextVolDriftAt) {
       o.volDriftTarget = Math.random()*2-1;
@@ -315,46 +310,24 @@ class DroneProcessor extends AudioWorkletProcessor {
   }
 
   updateControlRate(dt) {
-    const chordNotes = this.scaleNotes(this.chaosModeActive ? this.chaosSnap.scale : this.currentScale);
-    const glideSmooth = 1 - Math.exp(-dt / (this.chaosModeActive ? this.chaosSnap.glideSeconds : this.glideSeconds));
+    const chordNotes = this.scaleNotes(this.currentScale);
+    const glideSmooth = 1 - Math.exp(-dt / this.glideSeconds);
+    const free4 = this.osc4Free;
 
     for (let i = 0; i < 4; i++) {
       const o = this.oscs[i];
-
-      if (this.chaosModeActive) {
-        o.waveMorphTarget = o.chaosWave;
-        o.waveMorphCurrent += (o.waveMorphTarget - o.waveMorphCurrent) * glideSmooth;
-        o.ampTarget = o.chaosVol;
-
-        this.updateOscVolDrift(o, dt);
-        this.updateOscDrift(o, i, dt);
-
-        let semis = o.chaosTune;
-        if (this.chaosSnap.chordMode && i !== 0 && this.chaosSnap.scale !== 0) {
-          semis = this.chordTone(this.oscs[0].chaosTune, 2*i, chordNotes);
-        }
-        if (i !== 0) {
-          semis += o.driftCurrent * this.chaosSnap.driftDepth * this.DRIFT_MAX_SEMITONES;
-          semis = this.quantize(semis, this.chaosSnap.scale);
-        }
-        o.targetSemis = semis;
-        o.currentSemis += (o.targetSemis - o.currentSemis) * glideSmooth;
-        const freq = this.ROOT_FREQ * Math.pow(2, o.currentSemis/12);
-        o.phaseInc = freq / sampleRate;
-        continue;
-      }
 
       o.waveMorphTarget = o.waveNorm * 3;
       o.waveMorphCurrent += (o.waveMorphTarget - o.waveMorphCurrent) * glideSmooth;
 
       this.updateOscVolDrift(o, dt);
-      const volCurved = o.volNorm * o.volNorm;
-      let volLevel = volCurved + o.volDriftCurrent * this.volDriftDepth * this.VOL_DRIFT_MAX;
+      const volLevelBase = o.volNorm * o.volNorm; // quadratic taper
+      let volLevel = volLevelBase + o.volDriftCurrent * this.volDriftDepth * this.VOL_DRIFT_MAX;
       volLevel = Math.max(0, Math.min(1, volLevel));
-      o.ampTarget = (o.volNorm > 0.02) ? volLevel : 0;
+      o.ampTarget = (o.volNorm > this.VOL_OFF_THRESHOLD) ? volLevel : 0;
 
       let semis;
-      const chordThis = this.chordModeActive && i !== 0 && this.currentScale !== 0;
+      const chordThis = this.chordModeActive && i !== 0 && this.currentScale !== 0 && !(free4 && i === 3);
       if (chordThis) {
         this.updateOscDrift(o, i, dt);
         semis = this.chordTone(this.oscs[0].storedTune, 2*i, chordNotes);
@@ -362,25 +335,28 @@ class DroneProcessor extends AudioWorkletProcessor {
         semis = this.quantize(semis, this.currentScale);
       } else {
         semis = o.storedTune;
-        if (i !== 0) {
+        if (free4 && i === 3) {
+          // osc 4 played directly: no pitch drift at all, locked to the scale
+          semis = this.quantize(semis, this.currentScale);
+        } else if (i !== 0) {
           this.updateOscDrift(o, i, dt);
           semis += o.driftCurrent * this.driftDepth * this.DRIFT_MAX_SEMITONES;
           semis = this.quantize(semis, this.currentScale);
         }
       }
+      // fine detune applied after quantizing (osc 1 never detuned)
+      semis += this.DETUNE_DIR[i] * this.detune * this.DETUNE_MAX_SEMITONES;
+
       o.targetSemis = semis;
       o.currentSemis += (o.targetSemis - o.currentSemis) * glideSmooth;
-      const freq = this.ROOT_FREQ * Math.pow(2, o.currentSemis/12);
-      o.phaseInc = freq / sampleRate;
+      o.phaseInc = this.ROOT_FREQ * Math.pow(2, o.currentSemis/12) / sampleRate;
     }
   }
 
   process(inputs, outputs) {
     const out = outputs[0];
-    const ch = out[0];
-    const n = ch.length;
+    const n = out[0].length;
     this.updateControlRate(n/sampleRate);
-
     const blend = this.waveBlendModeActive;
     for (let s = 0; s < n; s++) {
       let mix = 0;
@@ -388,8 +364,7 @@ class DroneProcessor extends AudioWorkletProcessor {
         const o = this.oscs[i];
         o.phase += o.phaseInc; if (o.phase >= 1) o.phase -= 1;
         o.ampCurrent += (o.ampTarget - o.ampCurrent) * 0.002;
-        const wave = this.blendedWave(o.waveMorphCurrent, o.phase, blend);
-        mix += wave * o.ampCurrent;
+        mix += this.blendedWave(o.waveMorphCurrent, o.phase, blend) * o.ampCurrent;
       }
       const sample = mix/4;
       for (let c = 0; c < out.length; c++) out[c][s] = sample;
@@ -401,206 +376,311 @@ registerProcessor('drone-processor', DroneProcessor);
 `;
 
 // =====================================================================
-// Main thread
+// Main thread state
 // =====================================================================
+const DEPTH_OFF = 0.055, GLIDE_OFF = 0.055;
+const GLIDE_MIN = 0.005, GLIDE_MAX = 1.0;
+const TUNE_MIN = -24, TUNE_MAX = 24;
+const STORE_KEY = 'bagpipes_pitches_v1';
 
 let audioCtx = null, workletNode = null, filterNode = null;
-let selectedOsc = 0;
-let scaleIndex = 0;
-let chordActive = false, chaosActive = false, waveBlend = true;
-let autoClockOn = false, autoClockBPM = 120, autoClockTimer = null;
+let selectedOsc = 0, scaleIndex = 0;
+let chordActive = false, osc4FreeSw = false, waveBlend = true;
+let autoClockTimer = null, autoClockBPM = 120;
 
-const oscState = [0,1,2,3].map(() => ({ wave:0, vol:0.7, tune:0 }));
-const globalState = { driftDepth:0, driftSpeed:0, volDriftDepth:0, volDriftSpeed:0, glideSeconds:0.05 };
+const oscState = [0,1,2,3].map(() => ({ wave: 0, vol: 0.7, tune: 0 }));
+const knobNorm = { driftDepth:0, driftSpeed:0, volDriftDepth:0, volDriftSpeed:0, glide:0, detune:0 };
 
-function sendOsc(i){ if(workletNode) workletNode.port.postMessage({type:'osc', index:i, wave:oscState[i].wave, vol:oscState[i].vol}); }
-function sendGlobal(){ if(workletNode) workletNode.port.postMessage({type:'global', ...globalState, currentScale:scaleIndex, chordModeActive:chordActive, waveBlendModeActive:waveBlend}); }
-function sendTune(i){ if(workletNode) workletNode.port.postMessage({type:'setTune', index:i, value:oscState[i].tune}); }
-function sendTrigger(){ if(workletNode) workletNode.port.postMessage({type:'trigger'}); }
+const osc4Free = () => osc4FreeSw && chordActive && scaleIndex !== 0;
 
-function createKnob(label, min, max, initial, onChange, format) {
-  const wrap = document.createElement('div'); wrap.className='knob-wrap';
-  const knob = document.createElement('div'); knob.className='knob';
-  const labelEl = document.createElement('div'); labelEl.className='knob-label'; labelEl.textContent=label;
-  const valEl = document.createElement('div'); valEl.className='knob-val';
-  let value = initial;
-  function render(){ const norm=(value-min)/(max-min); knob.style.setProperty('--angle',(-135+norm*270)+'deg'); valEl.textContent=format?format(value):value.toFixed(2); }
-  function setValue(v){ value=Math.min(max,Math.max(min,v)); render(); onChange(value); }
-  let dragging=false, startY=0, startVal=0;
-  knob.addEventListener('pointerdown', e=>{dragging=true; startY=e.clientY; startVal=value; knob.setPointerCapture(e.pointerId);});
-  knob.addEventListener('pointermove', e=>{ if(!dragging) return; const dy=startY-e.clientY; setValue(startVal+(dy/150)*(max-min)); });
-  knob.addEventListener('pointerup', ()=>dragging=false);
-  knob.addEventListener('pointercancel', ()=>dragging=false);
-  render(); wrap.append(knob,labelEl,valEl);
-  return { el: wrap, setValue, getValue:()=>value };
+function post(m){ if (workletNode) workletNode.port.postMessage(m); }
+function sendOsc(i){ post({type:'osc', index:i, wave:oscState[i].wave, vol:oscState[i].vol}); }
+function sendTune(i){ post({type:'setTune', index:i, value:oscState[i].tune}); }
+function sendGlobal(){
+  const th = v => v < DEPTH_OFF ? 0 : v;                       // true-zero thresholds like the firmware
+  const glideNorm = knobNorm.glide < GLIDE_OFF ? 0 : knobNorm.glide;
+  post({ type:'global',
+    driftDepth: th(knobNorm.driftDepth), driftSpeed: th(knobNorm.driftSpeed),
+    volDriftDepth: th(knobNorm.volDriftDepth), volDriftSpeed: th(knobNorm.volDriftSpeed),
+    detune: th(knobNorm.detune),
+    glideSeconds: GLIDE_MIN + glideNorm*(GLIDE_MAX-GLIDE_MIN),
+    currentScale: scaleIndex, chordModeActive: chordActive, osc4FreeSwitch: osc4FreeSw,
+    waveBlendModeActive: waveBlend });
 }
+function sendTrigger(){ post({type:'trigger'}); }
 
-function createSwitch(label, initial, onChange) {
-  const wrap = document.createElement('div'); wrap.className='knob-wrap';
-  const sw = document.createElement('div'); sw.className='switch'+(initial?' on':'');
-  const labelEl = document.createElement('div'); labelEl.className='knob-label'; labelEl.textContent=label;
-  let on = initial;
-  sw.addEventListener('click', ()=>{ on=!on; sw.classList.toggle('on',on); onChange(on); });
-  wrap.append(sw,labelEl);
-  return { el: wrap, get:()=>on, set:(v)=>{on=v; sw.classList.toggle('on',on);} };
+const $ = (id) => document.getElementById(id);
+function readout(t){ $('readout').textContent = t; }
+
+// ---------- scale-degree stepping (same algorithm as the firmware) ----------
+function degreeList(scale) {
+  const mask = SCALE_MASKS[scale], list = [];
+  for (let oct = -3; oct <= 3; oct++)
+    for (let n = 0; n < 12; n++)
+      if (mask[n]) { const s = oct*12 + n; if (s >= TUNE_MIN && s <= TUNE_MAX) list.push(s); }
+  return list.sort((a,b)=>a-b);
 }
-
-function buildUI() {
-  const grid = document.getElementById('grid');
-
-  for (let i = 0; i < 4; i++) {
-    const col = document.createElement('div'); col.className='col';
-    const hdr = document.createElement('div'); hdr.className='col-label'; hdr.textContent='osc '+(i+1);
-    col.appendChild(hdr);
-
-    const led = document.createElement('div'); led.className='led'+(i===0?' on':'');
-    led.style.marginBottom='2px';
-    col.appendChild(led);
-    col._led = led;
-
-    const waveKnob = createKnob('wave',0,1,0,(v)=>{oscState[i].wave=v; sendOsc(i);});
-    col.appendChild(waveKnob.el);
-
-    const sliderWrap = document.createElement('div');
-    sliderWrap.style.display='flex'; sliderWrap.style.flexDirection='column'; sliderWrap.style.alignItems='center'; sliderWrap.style.gap='3px';
-    const slider = document.createElement('input');
-    slider.type='range'; slider.className='vslider'; slider.min=0; slider.max=1; slider.step=0.01; slider.value=0.7;
-    slider.addEventListener('input', ()=>{ oscState[i].vol=parseFloat(slider.value); sendOsc(i); });
-    const sLabel = document.createElement('div'); sLabel.className='knob-label'; sLabel.textContent='vol';
-    sliderWrap.append(slider,sLabel);
-    col.appendChild(sliderWrap);
-
-    grid.appendChild(col);
+function stepTune(steps) {
+  const o = oscState[selectedOsc];
+  if (selectedOsc !== 0 && scaleIndex !== 0) {
+    const list = degreeList(scaleIndex), cur = Math.round(o.tune);
+    let best = 0, bestD = Math.abs(list[0]-cur);
+    for (let k = 1; k < list.length; k++) { const d = Math.abs(list[k]-cur); if (d < bestD) { bestD = d; best = k; } }
+    o.tune = list[Math.max(0, Math.min(list.length-1, best+steps))];
+  } else {
+    o.tune = Math.max(TUNE_MIN, Math.min(TUNE_MAX, o.tune + steps));
   }
-  window._oscCols = Array.from(grid.children);
+  sendTune(selectedOsc); renderSelection();
+}
 
-  const gcol = document.createElement('div'); gcol.className='col';
-  const gLabel = document.createElement('div'); gLabel.className='col-label'; gLabel.textContent='global';
-  gcol.appendChild(gLabel);
+// ---------- selection rules (mirror updateEncoderAndSelection) ----------
+function enforceSelection() {
+  if (osc4Free()) { if (selectedOsc !== 3) selectedOsc = 0; }
+  else if (chordActive) selectedOsc = 0;
+}
+function shortPress() {
+  if (osc4Free()) selectedOsc = (selectedOsc === 0) ? 3 : 0;
+  else if (!chordActive) selectedOsc = (selectedOsc + 1) % 4;
+  enforceSelection(); renderSelection();
+}
 
-  // Encoder equivalent: select + drag-adjust
-  const selBtn = document.createElement('button'); selBtn.className='mini'; selBtn.textContent='SELECT OSC 1';
-  selBtn.addEventListener('click', ()=>{
-    selectedOsc = (selectedOsc+1)%4;
-    selBtn.textContent = 'SELECT OSC '+(selectedOsc+1);
-    window._oscCols.forEach((c,idx)=>c._led.classList.toggle('on', idx===selectedOsc));
+// ---------- persistence (manual save, like the EEPROM long-press) ----------
+function saveAll() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(oscState.map(o=>o.tune))); readout('pitches saved'); }
+  catch (e) { readout('save unavailable in this browser'); }
+  flashAll();
+}
+function loadSaved() {
+  try {
+    const v = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (Array.isArray(v) && v.length === 4) v.forEach((t,i)=>{ if (typeof t === 'number' && t >= TUNE_MIN && t <= TUNE_MAX) oscState[i].tune = t; });
+  } catch (e) {}
+}
+
+// =====================================================================
+// UI building blocks
+// =====================================================================
+const panel = $('panel');
+function place(el, x, y){ el.classList.add('abs'); el.style.left = x+'%'; el.style.top = y+'%'; panel.appendChild(el); return el; }
+function label(text, x, y, cls){ const l = document.createElement('div'); l.className = 'lbl'+(cls?' '+cls:''); l.innerHTML = text; l.style.left=x+'%'; l.style.top=y+'%'; panel.appendChild(l); return l; }
+function hole(cls, x, y){ const h = document.createElement('div'); h.className='hole '+cls; h.style.left=x+'%'; h.style.top=y+'%'; panel.appendChild(h); }
+
+function makeKnob(x, y, o) {
+  const k = document.createElement('div'); k.className = 'knob'+(o.small?' small':'');
+  k.innerHTML = '<div class="base"></div><div class="cap"></div>';
+  let v = o.init;
+  const render = () => k.style.setProperty('--angle', (-135 + (v-o.min)/(o.max-o.min)*270)+'deg');
+  const set = (nv, silent) => { v = Math.max(o.min, Math.min(o.max, nv)); render(); if (!silent) { o.onChange(v); readout(o.name+' '+(o.fmt?o.fmt(v):v.toFixed(2))); } };
+  let drag = false, sy = 0, sv = 0;
+  k.addEventListener('pointerdown', e => { drag = true; sy = e.clientY; sv = v; k.setPointerCapture(e.pointerId); k.classList.add('focus'); });
+  k.addEventListener('pointermove', e => { if (drag) set(sv + ((sy - e.clientY)/160)*(o.max-o.min)); });
+  const end = () => { drag = false; k.classList.remove('focus'); };
+  k.addEventListener('pointerup', end); k.addEventListener('pointercancel', end);
+  k.addEventListener('wheel', e => { e.preventDefault(); set(v - Math.sign(e.deltaY)*(o.max-o.min)*0.03); }, {passive:false});
+  k.addEventListener('dblclick', () => set(o.min));
+  render(); place(k, x, y);
+  return { set, get: () => v };
+}
+
+function makeFader(x, y, i) {
+  const f = document.createElement('div'); f.className = 'fader';
+  f.innerHTML = '<div class="slot"></div><div class="cap"></div>';
+  const cap = f.querySelector('.cap');
+  const render = () => { cap.style.bottom = (oscState[i].vol*100)+'%'; };
+  const fromEvent = e => { const r = f.getBoundingClientRect(); const nv = 1 - (e.clientY - r.top)/r.height;
+    oscState[i].vol = Math.max(0, Math.min(1, nv)); render(); sendOsc(i); readout('OSC'+(i+1)+' volume '+oscState[i].vol.toFixed(2)); };
+  let drag = false;
+  f.addEventListener('pointerdown', e => { drag = true; f.setPointerCapture(e.pointerId); fromEvent(e); });
+  f.addEventListener('pointermove', e => { if (drag) fromEvent(e); });
+  f.addEventListener('pointerup', () => drag = false); f.addEventListener('pointercancel', () => drag = false);
+  render(); place(f, x, y);
+}
+
+function makeToggle(x, y, initial, onChange) {
+  const t = document.createElement('div'); t.className = 'tog'+(initial?' on':'');
+  t.innerHTML = '<div class="body"></div><div class="lever"></div>';
+  let on = initial;
+  t.addEventListener('click', () => { on = !on; t.classList.toggle('on', on); onChange(on); });
+  place(t, x, y);
+  return { get: () => on };
+}
+
+const makeLed = (x, y) => { const l = document.createElement('div'); l.className = 'led'; place(l, x, y); return l; };
+
+// =====================================================================
+// Panel layout (percent coordinates measured from the photo of the real module)
+// =====================================================================
+const oscLeds = [], scaleLeds = [];
+let encoderEl, encoderTop, tuneReadout, clockJack;
+
+function renderSelection() {
+  oscLeds.forEach((l,i) => l.classList.toggle('on', i === selectedOsc));
+  const t = oscState[selectedOsc].tune;
+  tuneReadout.textContent = 'OSC'+(selectedOsc+1)+'  '+(t>0?'+':'')+Math.round(t*10)/10;
+}
+function flashAll() {
+  oscLeds.forEach(l => l.classList.add('on'));
+  setTimeout(renderSelection, 220);
+}
+
+function buildPanel() {
+  // decorative holes, as on the real board
+  [[10.4,2.4],[32.4,2.4],[60.6,2.4],[92.5,2.4],[43.8,96.5],[19.5,96.5],[64.5,96.5],[84.7,96.5]].forEach(p=>hole('slot',p[0],p[1]));
+  [[3,2.3],[97,3.3],[3.7,96],[96.4,96]].forEach(p=>hole('dot',p[0],p[1]));
+
+  label('Bagpipes', 47.8, 8.4, 'title');
+
+  // ----- encoder (osc select + pitch) -----
+  label('Osc select', 17.4, 6.6); label('Pitch', 27.4, 6.6);
+  encoderEl = document.createElement('div'); encoderEl.className = 'encoder';
+  encoderEl.innerHTML = '<div class="base"></div><div class="top"></div>';
+  encoderTop = encoderEl.querySelector('.top');
+  place(encoderEl, 6.9, 15.9);
+  tuneReadout = document.createElement('div'); tuneReadout.className = 'lbl small';
+  tuneReadout.style.left = '6.9%'; tuneReadout.style.top = '31.2%'; panel.appendChild(tuneReadout);
+
+  let down = false, moved = false, sy = 0, acc = 0, holdTimer = null, spin = 0, saved = false;
+  encoderEl.addEventListener('pointerdown', e => {
+    down = true; moved = false; saved = false; sy = e.clientY; acc = 0; encoderEl.setPointerCapture(e.pointerId); encoderEl.classList.add('down');
+    holdTimer = setTimeout(() => { if (!moved) { saved = true; saveAll(); } }, 1500);
   });
-  gcol.appendChild(selBtn);
-
-  const pitchKnob = createKnob('pitch (sel)', -24, 24, 0, (v)=>{
-    oscState[selectedOsc].tune = v; sendTune(selectedOsc);
-  }, v=>v.toFixed(1));
-  gcol.appendChild(pitchKnob.el);
-  // re-render pitch knob to reflect currently selected osc's stored tune when switching
-  selBtn.addEventListener('click', ()=>{ pitchKnob.setValue(oscState[selectedOsc].tune); });
-
-  const saveBtn = document.createElement('button'); saveBtn.className='mini'; saveBtn.textContent='SAVE (session)';
-  saveBtn.title = 'In-memory only in this preview — use localStorage yourself once hosted for real persistence';
-  gcol.appendChild(saveBtn);
-
-  const driftDepthKnob = createKnob('drift depth',0,1,0,(v)=>{globalState.driftDepth=v; sendGlobal();});
-  const driftSpeedKnob = createKnob('drift speed',0,1,0,(v)=>{globalState.driftSpeed=v; sendGlobal();});
-  const volDriftDepthKnob = createKnob('vol drift depth',0,1,0,(v)=>{globalState.volDriftDepth=v; sendGlobal();});
-  const volDriftSpeedKnob = createKnob('vol drift speed',0,1,0,(v)=>{globalState.volDriftSpeed=v; sendGlobal();});
-  const glideKnob = createKnob('glide (s)',0.005,1,0.05,(v)=>{globalState.glideSeconds=v; sendGlobal();}, v=>v.toFixed(2));
-  [driftDepthKnob,driftSpeedKnob,volDriftDepthKnob,volDriftSpeedKnob,glideKnob].forEach(k=>gcol.appendChild(k.el));
-
-  const modeLabel = document.createElement('div'); modeLabel.className='sec-label'; modeLabel.textContent='modes';
-  gcol.appendChild(modeLabel);
-
-  const chordSw = createSwitch('chord', false, (v)=>{ chordActive=v; sendGlobal(); });
-  const waveSw = createSwitch('blend', true, (v)=>{ waveBlend=v; sendGlobal(); });
-  const chaosSw = createSwitch('chaos', false, (v)=>{
-    chaosActive=v;
-    if (workletNode) workletNode.port.postMessage({type: v?'chaosActivate':'chaosDeactivate'});
+  encoderEl.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dy = sy - e.clientY; sy = e.clientY; acc += dy;
+    if (Math.abs(acc) > 3) moved = moved || Math.abs(acc) > 6;
+    const PX = 11; // pixels per detent
+    while (Math.abs(acc) >= PX) { const s = acc > 0 ? 1 : -1; acc -= s*PX; if (moved) clearTimeout(holdTimer); stepTune(s); spin += s*15; encoderTop.style.setProperty('--spin', spin+'deg'); }
   });
-  [chordSw, waveSw, chaosSw].forEach(s=>gcol.appendChild(s.el));
+  const up = () => { if (!down) return; down = false; clearTimeout(holdTimer); encoderEl.classList.remove('down'); if (!moved && !saved) shortPress(); };
+  encoderEl.addEventListener('pointerup', up);
+  encoderEl.addEventListener('pointercancel', () => { down = false; clearTimeout(holdTimer); encoderEl.classList.remove('down'); });
+  encoderEl.addEventListener('wheel', e => { e.preventDefault(); stepTune(e.deltaY < 0 ? 1 : -1); spin += (e.deltaY<0?15:-15); encoderTop.style.setProperty('--spin', spin+'deg'); }, {passive:false});
 
-  const qLabel = document.createElement('div'); qLabel.className='sec-label'; qLabel.textContent='quantizer';
-  gcol.appendChild(qLabel);
-  const scaleRow = document.createElement('div'); scaleRow.className='led-row';
-  const scaleLeds = [];
-  for (let s=0; s<4; s++){ const l=document.createElement('div'); l.className='led'; scaleLeds.push(l); scaleRow.appendChild(l); }
-  gcol.appendChild(scaleRow);
-  const scaleNameEl = document.createElement('div'); scaleNameEl.className='knob-val'; scaleNameEl.textContent='off';
-  gcol.appendChild(scaleNameEl);
-  const punchBtn = document.createElement('button'); punchBtn.className='mini'; punchBtn.textContent='punch';
-  punchBtn.addEventListener('click', ()=>{
-    scaleIndex=(scaleIndex+1)%5;
-    scaleLeds.forEach((l,idx)=>l.classList.toggle('on', scaleIndex!==0 && idx===scaleIndex-1));
-    scaleNameEl.textContent=SCALE_NAMES[scaleIndex];
-    sendGlobal();
+  // ----- selected-osc LEDs -----
+  [15.2, 24.1, 33.0, 41.9].forEach(x => oscLeds.push(makeLed(x, 19.6)));
+
+  // ----- wave knobs + osc labels + volume faders -----
+  label('Wave', 8.4, 37);
+  const oscX = [14.0, 23.2, 32.5, 42.0];
+  oscX.forEach((x, i) => {
+    makeKnob(x, 37, { name:'OSC'+(i+1)+' wave', min:0, max:1, init:0, onChange: v => { oscState[i].wave = v; sendOsc(i); },
+                      fmt: v => (waveBlend ? 'morph ' : 'shape ')+['sine','triangle','saw','square'][Math.min(3, Math.round(v*3))] });
+    label('Osc'+(i+1), x, 47.9);
+    makeFader(x + 0.3, 69.3, i);
   });
-  gcol.appendChild(punchBtn);
+  label('Vol', 10.8, 69.3);
 
-  const fLabel = document.createElement('div'); fLabel.className='sec-label'; fLabel.textContent='filter';
-  gcol.appendChild(fLabel);
-  const xy = document.createElement('div'); xy.className='xypad';
-  const dot = document.createElement('div'); dot.className='xy-dot'; dot.style.left='50%'; dot.style.top='50%';
-  xy.appendChild(dot);
-  function setXY(nx, ny) {
-    dot.style.left=(nx*100)+'%'; dot.style.top=((1-ny)*100)+'%';
+  // ----- pitch drift row -----
+  label('Pitch', 64.6, 17.6);
+  const kd = (name, x, y, key, fmt) => makeKnob(x, y, { name, min:0, max:1, init:0, onChange: v => { knobNorm[key] = v; sendGlobal(); },
+      fmt: fmt || (v => (v < DEPTH_OFF ? 'off' : v.toFixed(2))) });
+  kd('Pitch drift depth', 55.6, 27.7, 'driftDepth');   label('Dept', 55.6, 36.6);
+  kd('Pitch drift speed', 64.6, 27.7, 'driftSpeed');   label('Speed', 64.6, 36.6);
+  kd('Detune', 73.9, 27.7, 'detune', v => v < DEPTH_OFF ? 'off' : Math.round(v*35)+' cents'); label('Detune', 73.9, 36.6);
+
+  // ----- volume drift row + glide -----
+  label('Volume', 64.6, 42.9);
+  kd('Volume drift depth', 54.8, 50.7, 'volDriftDepth');  label('Dept', 54.8, 59.2);
+  kd('Volume drift speed', 64.6, 50.7, 'volDriftSpeed');  label('Speed', 64.6, 59.2);
+  kd('Glide', 73.7, 50.7, 'glide', v => { const g = v < GLIDE_OFF ? 0 : v; return (v < GLIDE_OFF ? 'off' : (GLIDE_MIN+g*(GLIDE_MAX-GLIDE_MIN)).toFixed(2)+' s'); });
+  label('Glide', 73.7, 59.2);
+
+  // ----- filter joystick -----
+  label('Filter', 84.4, 9.7);
+  const joy = document.createElement('div'); joy.className = 'joy';
+  joy.innerHTML = '<div class="pad"><div class="ball"></div></div>';
+  place(joy, 85.4, 32.7);
+  const pad = joy.querySelector('.pad'), ball = joy.querySelector('.ball');
+  const setXY = (nx, ny) => {
+    ball.style.left = (nx*100)+'%'; ball.style.top = ((1-ny)*100)+'%';
     if (filterNode && audioCtx) {
-      const cutoff = 100 * Math.pow(40, nx);
-      filterNode.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.01);
+      filterNode.frequency.setTargetAtTime(100*Math.pow(40, nx), audioCtx.currentTime, 0.01);
       filterNode.Q.setTargetAtTime(0.7 + ny*(8-0.7), audioCtx.currentTime, 0.01);
     }
-  }
-  let xyDragging=false;
-  function xyFromEvent(e){ const r=xy.getBoundingClientRect(); const nx=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)); const ny=Math.min(1,Math.max(0,1-(e.clientY-r.top)/r.height)); setXY(nx,ny); }
-  xy.addEventListener('pointerdown', e=>{xyDragging=true; xy.setPointerCapture(e.pointerId); xyFromEvent(e);});
-  xy.addEventListener('pointermove', e=>{ if(xyDragging) xyFromEvent(e); });
-  xy.addEventListener('pointerup', ()=>xyDragging=false);
-  gcol.appendChild(xy);
-  setXY(0.5, 0.3);
+    window._xy = [nx, ny];
+    readout('filter cutoff '+Math.round(100*Math.pow(40,nx))+' Hz · resonance '+(ny*100).toFixed(0)+'%');
+  };
+  let jd = false;
+  const jfrom = e => { const r = pad.getBoundingClientRect(); setXY(Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)), Math.min(1,Math.max(0,1-(e.clientY-r.top)/r.height))); };
+  pad.addEventListener('pointerdown', e => { jd = true; pad.setPointerCapture(e.pointerId); jfrom(e); });
+  pad.addEventListener('pointermove', e => { if (jd) jfrom(e); });
+  pad.addEventListener('pointerup', () => jd = false); pad.addEventListener('pointercancel', () => jd = false);
+  setXY(0.5, 0.3); readout('');
 
-  const tLabel = document.createElement('div'); tLabel.className='sec-label'; tLabel.textContent='clock trigger';
-  gcol.appendChild(tLabel);
-  const trigBtn = document.createElement('button'); trigBtn.className='mini'; trigBtn.textContent='TRIG';
-  trigBtn.addEventListener('click', sendTrigger);
-  gcol.appendChild(trigBtn);
-  const clockSw = createSwitch('auto clock', false, (v)=>{
-    autoClockOn = v;
-    if (autoClockTimer) { clearInterval(autoClockTimer); autoClockTimer=null; }
-    if (v) { const ms = 60000/autoClockBPM; autoClockTimer = setInterval(sendTrigger, ms); }
+  // ----- quantizer LEDs + punch button -----
+  [79.1, 81.6, 84.2, 86.6].forEach(x => scaleLeds.push(makeLed(x, 58.8)));
+  [['M',79.1],['m',81.6],['P',84.2],['WT',86.6]].forEach(a => label(a[0], a[1], 64.2, 'small lc'));
+  const punch = document.createElement('div'); punch.className = 'punch'; place(punch, 83.5, 71.8);
+  punch.addEventListener('click', () => {
+    scaleIndex = (scaleIndex+1) % 5;
+    scaleLeds.forEach((l,i) => l.classList.toggle('on', scaleIndex !== 0 && i === scaleIndex-1));
+    enforceSelection(); renderSelection(); sendGlobal();
+    readout('scale: '+SCALE_NAMES[scaleIndex]);
   });
-  gcol.appendChild(clockSw.el);
-  const bpmKnob = createKnob('bpm',40,240,120,(v)=>{
-    autoClockBPM = v;
-    if (autoClockTimer) { clearInterval(autoClockTimer); autoClockTimer = setInterval(sendTrigger, 60000/autoClockBPM); }
-  }, v=>Math.round(v));
-  gcol.appendChild(bpmKnob.el);
 
-  grid.appendChild(gcol);
+  // ----- mode switches -----
+  label('Chord', 55.6, 74.7);
+  makeToggle(55.6, 79.4, false, v => { chordActive = v; enforceSelection(); renderSelection(); sendGlobal(); readout('chord mode '+(v?'on':'off')+(v && scaleIndex===0 ? ' (pick a scale)' : '')); });
+  label('Free osc4', 64.8, 85.4);
+  makeToggle(64.8, 79.4, false, v => { osc4FreeSw = v; enforceSelection(); renderSelection(); sendGlobal();
+      readout('free osc4 '+(v?'on':'off')+(v && !(chordActive && scaleIndex) ? ' — needs chord mode on + a scale' : '')); });
+  label('Blend', 73.9, 74.7);
+  makeToggle(73.9, 79.4, true, v => { waveBlend = v; sendGlobal(); readout('wave '+(v?'blend':'discrete')); });
+
+  // ----- jacks -----
+  const out = document.createElement('div'); out.className = 'jack'; out.title = 'Audio out — click to start audio'; place(out, 7.3, 51.3);
+  label('Out', 7.3, 57.2, 'small');
+  out.addEventListener('click', () => { if (!audioCtx) startAudio(); });
+  clockJack = document.createElement('div'); clockJack.className = 'jack'; clockJack.title = 'Clock input — click to send one pulse'; place(clockJack, 92.2, 79.5);
+  label('Clock in', 92.2, 85.3, 'small');
+  clockJack.addEventListener('click', () => { sendTrigger(); clockJack.classList.add('flash'); setTimeout(()=>clockJack.classList.remove('flash'), 120); readout('clock pulse'); });
+
+  // ----- web-only test clock (no equivalent on the hardware) -----
+  label('Test clock', 92.6, 50.2, 'small');
+  const startClock = () => { clearInterval(autoClockTimer); autoClockTimer = setInterval(() => { sendTrigger(); clockJack.classList.add('flash'); setTimeout(()=>clockJack.classList.remove('flash'), 80); }, 60000/autoClockBPM); };
+  makeToggle(92.6, 55.8, false, v => { clearInterval(autoClockTimer); autoClockTimer = null; if (v) startClock(); clockJack.classList.toggle('live', v); readout('test clock '+(v?'on':'off')); });
+  makeKnob(92.6, 65.2, { name:'Test clock tempo', min:40, max:240, init:120, small:true, fmt: v => Math.round(v)+' bpm',
+    onChange: v => { autoClockBPM = v; if (autoClockTimer) startClock(); } });
+  label('BPM', 92.6, 71.2, 'small');
+
+  renderSelection();
 }
 
+// =====================================================================
+// Audio start
+// =====================================================================
 async function startAudio() {
-  const startBtn = document.getElementById('startBtn');
-  const status = document.getElementById('status');
-  startBtn.disabled = true; status.textContent = 'starting...';
-
-  audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  const blob = new Blob([PROCESSOR_SRC], {type:'application/javascript'});
-  const url = URL.createObjectURL(blob);
-  await audioCtx.audioWorklet.addModule(url);
-
-  workletNode = new AudioWorkletNode(audioCtx, 'drone-processor', {outputChannelCount:[2]});
-  filterNode = audioCtx.createBiquadFilter();
-  filterNode.type = 'lowpass';
-  filterNode.frequency.value = 100 * Math.pow(40, 0.5);
-  filterNode.Q.value = 0.7 + 0.3*(8-0.7);
-
-  workletNode.connect(filterNode);
-  filterNode.connect(audioCtx.destination);
-
-  for (let i=0;i<4;i++){ sendOsc(i); sendTune(i); }
-  sendGlobal();
-
-  status.textContent = 'running — ' + audioCtx.sampleRate + 'Hz';
+  const btn = $('startBtn'), status = $('status');
+  if (audioCtx) { if (audioCtx.state === 'suspended') await audioCtx.resume(); return; }
+  btn.disabled = true; status.textContent = 'starting…';
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    try {
+      await audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([PROCESSOR_SRC], {type:'application/javascript'})));
+    } catch (e1) {   // some browsers refuse blob: modules on local file pages
+      await audioCtx.audioWorklet.addModule('data:application/javascript;base64,'+btoa(PROCESSOR_SRC));
+    }
+    workletNode = new AudioWorkletNode(audioCtx, 'drone-processor', { outputChannelCount:[2] });
+    filterNode = audioCtx.createBiquadFilter();
+    filterNode.type = 'lowpass';
+    const [nx, ny] = window._xy || [0.5, 0.3];
+    filterNode.frequency.value = 100*Math.pow(40, nx);
+    filterNode.Q.value = 0.7 + ny*(8-0.7);
+    workletNode.connect(filterNode); filterNode.connect(audioCtx.destination);
+    for (let i = 0; i < 4; i++) { sendOsc(i); sendTune(i); }
+    sendGlobal();
+    status.textContent = 'running — '+audioCtx.sampleRate+' Hz';
+    btn.textContent = 'Running';
+  } catch (err) {
+    status.textContent = 'could not start audio: '+err.message; btn.disabled = false; audioCtx = null;
+  }
 }
+$('startBtn').addEventListener('click', startAudio);
 
-document.getElementById('startBtn').addEventListener('click', startAudio);
-buildUI();
+loadSaved();
+buildPanel();
+// expose a little for automated tests
+window.__bag = { oscState, get state(){ return {selectedOsc, scaleIndex, chordActive, osc4FreeSw, free:osc4Free()}; }, stepTune, shortPress, PROCESSOR_SRC };
 </script>
 </body>
 </html>
