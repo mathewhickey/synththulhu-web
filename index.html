@@ -113,13 +113,6 @@
            box-shadow: 0 0 0 .45cqw #b6b6b6, 0 0 0 .6cqw #555, 0 .4cqw .8cqw rgba(0,0,0,.5); }
   .punch:active { transform: translate(-50%,-50%) scale(.93); }
 
-  /* jacks */
-  .jack { width: 2.9cqw; height: 2.9cqw; border-radius: 50%; cursor: pointer; touch-action: manipulation;
-          background: radial-gradient(circle, #050505 0 28%, #bdbdbd 30% 52%, #6e6e6e 54% 66%, #cfcfcf 68% 100%);
-          box-shadow: 0 .25cqw .5cqw rgba(0,0,0,.5); }
-  .jack.live { box-shadow: 0 0 0 .22cqw rgba(60,255,160,.9), 0 0 1.2cqw rgba(60,255,160,.7); }
-  .jack.flash { box-shadow: 0 0 0 .22cqw rgba(255,255,255,.95), 0 0 1.4cqw rgba(255,255,255,.9); }
-
   /* joystick */
   .joy { width: 15.2cqw; height: 15.2cqw; border-radius: 50%;
          background: radial-gradient(circle at 40% 30%, #3a3a3a, #121212 70%); box-shadow: 0 .6cqw 1.3cqw rgba(0,0,0,.6), inset 0 0 0 .35cqw #0b0b0b; }
@@ -135,9 +128,6 @@
 
   /* ---------- control bar under the panel ---------- */
   .bar { display:flex; align-items:center; gap: 12px; margin-top: 10px; flex-wrap: wrap; font-size: 12px; color: var(--ui-dim); }
-  button.start { background: #e8dfd0; color:#1b1309; border: none; border-radius: 6px; padding: 8px 18px; font-weight: 700; font-size: 12px;
-                 letter-spacing:.1em; text-transform: uppercase; cursor: pointer; }
-  button.start:disabled { opacity:.45; cursor: default; }
   .bar .value { color: var(--ui); font-variant-numeric: tabular-nums; }
   .bar .hint { margin-left: auto; opacity: .75; }
   .rotate-note { display:none; font-size:12px; color: var(--ui-dim); margin: 6px 0 0; text-align:center; }
@@ -149,8 +139,7 @@
 <div class="stage">
   <div class="panel" id="panel"></div>
   <div class="bar">
-    <button class="start" id="startBtn">Start audio</button>
-    <span id="status">audio stopped</span>
+    <span id="status">audio off — flip the POWER switch on the module</span>
     <span class="value" id="readout"></span>
     <span class="hint">drag knobs up/down · encoder: drag to turn, tap to select, hold 1.5 s to save</span>
   </div>
@@ -502,7 +491,7 @@ function makeToggle(x, y, initial, onChange) {
   let on = initial;
   t.addEventListener('click', () => { on = !on; t.classList.toggle('on', on); onChange(on); });
   place(t, x, y);
-  return { get: () => on };
+  return { get: () => on, set: (v) => { on = v; t.classList.toggle('on', on); } };
 }
 
 const makeLed = (x, y) => { const l = document.createElement('div'); l.className = 'led'; place(l, x, y); return l; };
@@ -511,7 +500,7 @@ const makeLed = (x, y) => { const l = document.createElement('div'); l.className
 // Panel layout (percent coordinates measured from the photo of the real module)
 // =====================================================================
 const oscLeds = [], scaleLeds = [];
-let encoderEl, encoderTop, tuneReadout, clockJack;
+let encoderEl, encoderTop, tuneReadout, powerLed, clockLed;
 
 function renderSelection() {
   oscLeds.forEach((l,i) => l.classList.toggle('on', i === selectedOsc));
@@ -627,18 +616,20 @@ function buildPanel() {
   label('Blend', 73.9, 74.7);
   makeToggle(73.9, 79.4, true, v => { waveBlend = v; sendGlobal(); readout('wave '+(v?'blend':'discrete')); });
 
-  // ----- jacks -----
-  const out = document.createElement('div'); out.className = 'jack'; out.title = 'Audio out — click to start audio'; place(out, 7.3, 51.3);
-  label('Out', 7.3, 57.2, 'small');
-  out.addEventListener('click', () => { if (!audioCtx) startAudio(); });
-  clockJack = document.createElement('div'); clockJack.className = 'jack'; clockJack.title = 'Clock input — click to send one pulse'; place(clockJack, 92.2, 79.5);
-  label('Clock in', 92.2, 85.3, 'small');
-  clockJack.addEventListener('click', () => { sendTrigger(); clockJack.classList.add('flash'); setTimeout(()=>clockJack.classList.remove('flash'), 120); readout('clock pulse'); });
+  // ----- power switch (replaces the old Start/Stop button) -----
+  label('Power', 7.3, 50.2);
+  const power = makeToggle(7.3, 55.6, false, async v => {
+    if (v) { const ok = await startAudio(); if (!ok) power.set(false); }
+    else await stopAudio();
+  });
+  powerLed = makeLed(7.3, 61.2);
 
   // ----- web-only test clock (no equivalent on the hardware) -----
   label('Test clock', 92.6, 50.2, 'small');
-  const startClock = () => { clearInterval(autoClockTimer); autoClockTimer = setInterval(() => { sendTrigger(); clockJack.classList.add('flash'); setTimeout(()=>clockJack.classList.remove('flash'), 80); }, 60000/autoClockBPM); };
-  makeToggle(92.6, 55.8, false, v => { clearInterval(autoClockTimer); autoClockTimer = null; if (v) startClock(); clockJack.classList.toggle('live', v); readout('test clock '+(v?'on':'off')); });
+  clockLed = makeLed(96.7, 55.8);
+  const pulse = () => { sendTrigger(); clockLed.classList.add('on'); setTimeout(() => clockLed.classList.remove('on'), 90); };
+  const startClock = () => { clearInterval(autoClockTimer); autoClockTimer = setInterval(pulse, 60000/autoClockBPM); };
+  makeToggle(92.6, 55.8, false, v => { clearInterval(autoClockTimer); autoClockTimer = null; if (v) startClock(); readout('test clock '+(v?'on':'off')); });
   makeKnob(92.6, 65.2, { name:'Test clock tempo', min:40, max:240, init:120, small:true, fmt: v => Math.round(v)+' bpm',
     onChange: v => { autoClockBPM = v; if (autoClockTimer) startClock(); } });
   label('BPM', 92.6, 71.2, 'small');
@@ -649,38 +640,53 @@ function buildPanel() {
 // =====================================================================
 // Audio start
 // =====================================================================
+let audioBusy = false;
 async function startAudio() {
-  const btn = $('startBtn'), status = $('status');
-  if (audioCtx) { if (audioCtx.state === 'suspended') await audioCtx.resume(); return; }
-  btn.disabled = true; status.textContent = 'starting…';
+  const status = $('status');
+  if (audioBusy) return false;
+  audioBusy = true;
   try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    try {
-      await audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([PROCESSOR_SRC], {type:'application/javascript'})));
-    } catch (e1) {   // some browsers refuse blob: modules on local file pages
-      await audioCtx.audioWorklet.addModule('data:application/javascript;base64,'+btoa(PROCESSOR_SRC));
+    if (audioCtx) {                       // already built once: just resume
+      await audioCtx.resume();
+    } else {
+      status.textContent = 'starting…';
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        await audioCtx.audioWorklet.addModule(URL.createObjectURL(new Blob([PROCESSOR_SRC], {type:'application/javascript'})));
+      } catch (e1) {   // some browsers refuse blob: modules on local file pages
+        await audioCtx.audioWorklet.addModule('data:application/javascript;base64,'+btoa(PROCESSOR_SRC));
+      }
+      workletNode = new AudioWorkletNode(audioCtx, 'drone-processor', { outputChannelCount:[2] });
+      filterNode = audioCtx.createBiquadFilter();
+      filterNode.type = 'lowpass';
+      const [nx, ny] = window._xy || [0.5, 0.3];
+      filterNode.frequency.value = 100*Math.pow(40, nx);
+      filterNode.Q.value = 0.7 + ny*(8-0.7);
+      workletNode.connect(filterNode); filterNode.connect(audioCtx.destination);
+      for (let i = 0; i < 4; i++) { sendOsc(i); sendTune(i); }
+      sendGlobal();
     }
-    workletNode = new AudioWorkletNode(audioCtx, 'drone-processor', { outputChannelCount:[2] });
-    filterNode = audioCtx.createBiquadFilter();
-    filterNode.type = 'lowpass';
-    const [nx, ny] = window._xy || [0.5, 0.3];
-    filterNode.frequency.value = 100*Math.pow(40, nx);
-    filterNode.Q.value = 0.7 + ny*(8-0.7);
-    workletNode.connect(filterNode); filterNode.connect(audioCtx.destination);
-    for (let i = 0; i < 4; i++) { sendOsc(i); sendTune(i); }
-    sendGlobal();
-    status.textContent = 'running — '+audioCtx.sampleRate+' Hz';
-    btn.textContent = 'Running';
+    status.textContent = 'power on — '+audioCtx.sampleRate+' Hz';
+    powerLed.classList.add('on');
+    return true;
   } catch (err) {
-    status.textContent = 'could not start audio: '+err.message; btn.disabled = false; audioCtx = null;
-  }
+    status.textContent = 'could not start audio: '+err.message;
+    try { if (audioCtx) audioCtx.close(); } catch (e) {}
+    audioCtx = null; workletNode = null; filterNode = null;
+    powerLed.classList.remove('on');
+    return false;
+  } finally { audioBusy = false; }
 }
-$('startBtn').addEventListener('click', startAudio);
+async function stopAudio() {
+  powerLed.classList.remove('on');
+  if (audioCtx && audioCtx.state === 'running') { try { await audioCtx.suspend(); } catch (e) {} }
+  $('status').textContent = 'audio off — flip the POWER switch on the module';
+}
 
 loadSaved();
 buildPanel();
 // expose a little for automated tests
-window.__bag = { oscState, get state(){ return {selectedOsc, scaleIndex, chordActive, osc4FreeSw, free:osc4Free()}; }, stepTune, shortPress, PROCESSOR_SRC };
+window.__bag = { get audioState(){ return audioCtx ? audioCtx.state : 'none'; }, oscState, get state(){ return {selectedOsc, scaleIndex, chordActive, osc4FreeSw, free:osc4Free()}; }, stepTune, shortPress, PROCESSOR_SRC };
 </script>
 </body>
 </html>
